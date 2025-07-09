@@ -64,8 +64,6 @@ export function Combobox({
     setSelectedIndex(-1)
   }, [inputValue, options])
 
-
-
   // Handle clicks outside to close dropdown
   React.useEffect(() => {
     if (isOpen) {
@@ -162,12 +160,7 @@ export function Combobox({
       {isOpen && filteredOptions.length > 0 && (
         <div
           ref={dropdownRef}
-          className="fixed z-[999] bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto"
-          style={{
-            top: inputRef.current ? `${inputRef.current.getBoundingClientRect().bottom + window.scrollY + 4}px` : '0px',
-            left: inputRef.current ? `${inputRef.current.getBoundingClientRect().left + window.scrollX}px` : '0px',
-            width: inputRef.current ? `${inputRef.current.getBoundingClientRect().width}px` : 'auto',
-          }}
+          className="absolute top-full left-0 right-0 z-[100] mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto"
         >
           {filteredOptions.map((option, index) => (
             <div
@@ -190,14 +183,7 @@ export function Combobox({
       )}
       
       {isOpen && filteredOptions.length === 0 && inputValue.trim() && (
-        <div 
-          className="fixed z-[999] bg-white border border-gray-200 rounded-md shadow-lg p-3 text-sm text-gray-500"
-          style={{
-            top: inputRef.current ? `${inputRef.current.getBoundingClientRect().bottom + window.scrollY + 4}px` : '0px',
-            left: inputRef.current ? `${inputRef.current.getBoundingClientRect().left + window.scrollX}px` : '0px',
-            width: inputRef.current ? `${inputRef.current.getBoundingClientRect().width}px` : 'auto',
-          }}
-        >
+        <div className="absolute top-full left-0 right-0 z-[100] mt-1 bg-white border border-gray-200 rounded-md shadow-lg p-3 text-sm text-gray-500">
           No options found
         </div>
       )}
