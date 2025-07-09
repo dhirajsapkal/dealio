@@ -337,8 +337,8 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-lg">
-              <DialogHeader>
+            <DialogContent className="w-[calc(100vw-20px)] max-w-[calc(100vw-20px)] h-[calc(100vh-20px)] max-h-[calc(100vh-20px)] sm:w-[85vw] sm:max-w-lg sm:h-auto sm:max-h-[calc(100vh-2rem)] overflow-y-auto flex flex-col">
+              <DialogHeader className="flex-shrink-0">
                 <DialogTitle className="flex items-center gap-2">
                   <Guitar className="w-5 h-5 text-teal-600" />
                   Track New Guitar
@@ -348,7 +348,7 @@ export default function Dashboard() {
                 </DialogDescription>
               </DialogHeader>
               
-              <div className="space-y-6 py-4 min-h-[400px]">
+              <div className="space-y-6 py-4 min-h-[400px] flex-1 overflow-y-auto">
                 {/* Step 1: Guitar Type */}
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
@@ -457,7 +457,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <DialogFooter className="flex gap-2">
+              <DialogFooter className="flex gap-2 flex-shrink-0">
                 <motion.div
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
