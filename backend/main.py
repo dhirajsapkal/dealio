@@ -14,6 +14,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from typing import List, Dict, Optional
 
+# Import the comprehensive guitar database
+from guitar_database import (
+    get_all_brands, 
+    get_models_for_brand, 
+    search_guitars, 
+    get_guitar_info,
+    get_guitars_by_type,
+    get_guitars_by_price_range,
+    GUITAR_DATABASE
+)
+
 # Temporarily comment out scrapers for deployment
 # from scrapers import (
 #     scrape_reverb, 
@@ -28,17 +39,19 @@ from typing import List, Dict, Optional
 
 # Fallback scraper configuration for demo
 SCRAPERS = {}
-SCRAPER_PRIORITY = ["Reverb", "eBay", "Facebook", "Guitar Center", "Craigslist", "Sweetwater"]
+SCRAPER_PRIORITY = ["Reverb", "eBay", "Guitar Center", "Sweetwater", "Facebook", "Craigslist"]
 
-# Configure logging
+# Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Create FastAPI app
+# Initialize FastAPI app
 app = FastAPI(
     title="Dealio - Guitar Deal Tracker API",
-    description="A guitar deal tracking API that helps users find the best guitar deals online.",
-    version="1.0.0"
+    description="Real-time guitar deal aggregation from multiple marketplaces",
+    version="1.0.0",
+    docs_url="/docs",
+    redoc_url="/redoc"
 )
 
 # Configure CORS to allow frontend connections
@@ -55,7 +68,7 @@ app.add_middleware(
         "https://dealio-2ucr9b3cf-dhirajsapkals-projects.vercel.app",  # Original Vercel URL
         "https://*.vercel.app",  # Vercel deployment domains
         "https://dealio-*.vercel.app",  # Specific pattern for your app
-        "*"  # Allow all origins for demo (remove in production)
+        "*"  # Allow all origins for demo - remove in production
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -662,48 +675,57 @@ async def get_available_sources():
 @app.get("/guitars/brands")
 async def get_guitar_brands():
     """Get list of all available guitar brands."""
+    brands = get_all_brands()
     return {
-        "brands": sorted(GUITAR_BRANDS),
-        "count": len(GUITAR_BRANDS)
+        "brands": sorted(brands),
+        "count": len(brands)
     }
 
 @app.get("/guitars/models")
 async def get_guitar_models(brand: Optional[str] = None, guitar_type: Optional[str] = None):
     """Get guitar models, optionally filtered by brand and type."""
     
-    # Generate models from the GUITAR_MODEL_DATABASE
-    models_by_brand = {}
-    for brand_name, models in GUITAR_MODEL_DATABASE.items():
-        models_by_brand[brand_name] = {
-            "Electric": list(models.keys()),
-            "Acoustic": [],  # Add more as database expands
-            "Bass": []       # Add more as database expands
-        }
-    
     if not brand:
-        # Return all models grouped by brand
+        # Return all brands that have models in our database
+        all_brands = get_all_brands()
         return {
-            "models_by_brand": models_by_brand,
-            "brands": list(models_by_brand.keys())
+            "message": "Please specify a brand to get models",
+            "available_brands": all_brands[:20],  # Show first 20 brands
+            "total_brands": len(all_brands)
         }
     
-    brand_models = models_by_brand.get(brand, {})
+    # Get models for the specific brand
+    models = get_models_for_brand(brand, guitar_type)
     
-    if guitar_type and guitar_type in brand_models:
+    if models:
+        # Group models by type
+        models_by_type = {}
+        for model in models:
+            model_type = model['type']
+            if model_type not in models_by_type:
+                models_by_type[model_type] = []
+            models_by_type[model_type].append({
+                'name': model['name'],
+                'msrp': model['msrp'],
+                'tier': model['tier']
+            })
+        
+        # If specific type requested, return only that type
+        if guitar_type:
+            matching_models = [m for m in models if m['type'].lower() == guitar_type.lower()]
+            return {
+                "brand": brand,
+                "type": guitar_type,
+                "models": [m['name'] for m in matching_models],
+                "models_with_details": matching_models
+            }
+        
+        # Return all models for the brand
         return {
             "brand": brand,
-            "type": guitar_type,
-            "models": brand_models[guitar_type]
-        }
-    elif brand_models:
-        # Return all models for the brand across all types
-        all_models = []
-        for type_models in brand_models.values():
-            all_models.extend(type_models)
-        return {
-            "brand": brand,
-            "models": sorted(list(set(all_models))),  # Remove duplicates and sort
-            "models_by_type": brand_models
+            "models": [m['name'] for m in models],
+            "models_by_type": models_by_type,
+            "total_models": len(models)
         }
     else:
         return {
