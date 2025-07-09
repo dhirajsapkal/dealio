@@ -489,22 +489,22 @@ function GuitarDetailPageContent() {
       >
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
               <Button 
                 variant="ghost" 
                 onClick={() => router.push('/')}
-                className="flex items-center gap-2 hover:bg-teal-50 hover:text-teal-700 transition-colors duration-200"
+                className="flex items-center gap-2 hover:bg-teal-50 hover:text-teal-700 transition-colors duration-200 flex-shrink-0"
               >
                 <ArrowLeft className="w-4 h-4" />
-                Back to Dashboard
+                <span className="hidden sm:inline">Back to Dashboard</span>
               </Button>
-              <div className="h-6 w-px bg-gray-300"></div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <div className="h-6 w-px bg-gray-300 hidden sm:block"></div>
+              <h1 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">
                 {guitarData.brand} {guitarData.model}
               </h1>
             </div>
             
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-shrink-0">
               <Button 
                 variant="outline" 
                 size="sm"
@@ -513,7 +513,9 @@ function GuitarDetailPageContent() {
                 className="flex items-center gap-2 hover:bg-teal-50 hover:border-teal-300 transition-colors duration-200"
               >
                 <RefreshCw className={`w-4 h-4 ${scrapingStatus.isActive ? 'animate-spin' : ''}`} />
-                {scrapingStatus.isActive ? 'Scanning...' : 'Refresh'}
+                <span className="hidden sm:inline">
+                  {scrapingStatus.isActive ? 'Scanning...' : 'Refresh'}
+                </span>
               </Button>
             </div>
           </div>
