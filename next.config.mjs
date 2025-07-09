@@ -1,74 +1,55 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Optimize build performance
-  experimental: {
-    turbo: {
-      rules: {
-        '*.svg': {
-          loaders: ['@svgr/webpack'],
-          as: '*.js',
-        },
-      },
-    },
-  },
-  
-  // Build optimization
+  // Build optimization - remove experimental turbo features that cause issues
   swcMinify: true,
   compress: true,
   
-  // Reduce build memory usage
-  webpack: (config, { isServer }) => {
-    // Optimize for smaller bundle size
-    if (!isServer) {
+  // Simple webpack config to avoid memory issues
+  webpack: (config, { isServer, dev }) => {
+    // Only apply optimizations in production
+    if (!dev && !isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
         fs: false,
         net: false,
         tls: false,
       };
-    }
-    
-    // Reduce memory usage during build
-    config.optimization = {
-      ...config.optimization,
-      splitChunks: {
+      
+      // Simple chunking strategy
+      config.optimization.splitChunks = {
         chunks: 'all',
         cacheGroups: {
-          default: {
-            minChunks: 2,
-            priority: -20,
-            reuseExistingChunk: true,
-          },
           vendor: {
             test: /[\\/]node_modules[\\/]/,
             name: 'vendors',
-            priority: -10,
             chunks: 'all',
           },
         },
-      },
-    };
+      };
+    }
     
     return config;
   },
   
-  // Disable sourcemaps in production to reduce build time
+  // Disable resource-intensive features during build
   productionBrowserSourceMaps: false,
   
-  // Image optimization
+  // Disable image optimization to speed up builds
   images: {
-    unoptimized: true, // Disable image optimization to speed up builds
+    unoptimized: true,
   },
   
-  // Disable ESLint during builds (we can run it separately)
+  // Skip linting and type checking during builds to prevent timeouts
   eslint: {
     ignoreDuringBuilds: true,
   },
   
-  // Disable TypeScript checking during builds (we can run it separately)
   typescript: {
     ignoreBuildErrors: true,
   },
+  
+  // Output configuration for better compatibility
+  output: 'standalone',
 };
 
 export default nextConfig; 
