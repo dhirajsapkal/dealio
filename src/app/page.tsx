@@ -15,6 +15,7 @@ import { Search, Guitar, Plus, TrendingUp, Clock, DollarSign, X, Trash2 } from '
 // Helper function to get the correct API URL
 const getApiUrl = () => {
   // Use environment variable for production/preview, with a fallback for local development.
+  // Updated to use correct Render backend URL
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
   console.log('🔍 API URL being used:', apiUrl);
   console.log('🔍 Environment variable NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
