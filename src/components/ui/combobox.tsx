@@ -33,7 +33,6 @@ export function Combobox({
   const [selectedIndex, setSelectedIndex] = React.useState(-1)
   const inputRef = React.useRef<HTMLInputElement>(null)
   const dropdownRef = React.useRef<HTMLDivElement>(null)
-  const [dropdownPosition, setDropdownPosition] = React.useState({ top: 0, left: 0, width: 0 })
 
   // Update input value when prop value changes
   React.useEffect(() => {
@@ -65,33 +64,7 @@ export function Combobox({
     setSelectedIndex(-1)
   }, [inputValue, options])
 
-  // Update dropdown position when it's open
-  React.useEffect(() => {
-    if (isOpen && inputRef.current) {
-      const updatePosition = () => {
-        if (inputRef.current) {
-          const rect = inputRef.current.getBoundingClientRect()
-          setDropdownPosition({
-            top: rect.bottom + window.scrollY + 4,
-            left: rect.left + window.scrollX,
-            width: rect.width,
-          })
-        }
-      }
-      
-      updatePosition()
-      
-      // Update position on scroll and resize
-      const handleUpdate = () => updatePosition()
-      window.addEventListener('scroll', handleUpdate, true)
-      window.addEventListener('resize', handleUpdate)
-      
-      return () => {
-        window.removeEventListener('scroll', handleUpdate, true)
-        window.removeEventListener('resize', handleUpdate)
-      }
-    }
-  }, [isOpen])
+
 
   // Handle clicks outside to close dropdown
   React.useEffect(() => {
@@ -186,14 +159,14 @@ export function Combobox({
         className="w-full"
       />
       
-      {isOpen && filteredOptions.length > 0 && inputRef.current && (
+      {isOpen && filteredOptions.length > 0 && (
         <div
           ref={dropdownRef}
           className="fixed z-[999] bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto"
           style={{
-            top: `${dropdownPosition.top}px`,
-            left: `${dropdownPosition.left}px`,
-            width: `${dropdownPosition.width}px`,
+            top: inputRef.current ? `${inputRef.current.getBoundingClientRect().bottom + window.scrollY + 4}px` : '0px',
+            left: inputRef.current ? `${inputRef.current.getBoundingClientRect().left + window.scrollX}px` : '0px',
+            width: inputRef.current ? `${inputRef.current.getBoundingClientRect().width}px` : 'auto',
           }}
         >
           {filteredOptions.map((option, index) => (
@@ -216,13 +189,13 @@ export function Combobox({
         </div>
       )}
       
-      {isOpen && filteredOptions.length === 0 && inputValue.trim() && inputRef.current && (
+      {isOpen && filteredOptions.length === 0 && inputValue.trim() && (
         <div 
           className="fixed z-[999] bg-white border border-gray-200 rounded-md shadow-lg p-3 text-sm text-gray-500"
           style={{
-            top: `${dropdownPosition.top}px`,
-            left: `${dropdownPosition.left}px`,
-            width: `${dropdownPosition.width}px`,
+            top: inputRef.current ? `${inputRef.current.getBoundingClientRect().bottom + window.scrollY + 4}px` : '0px',
+            left: inputRef.current ? `${inputRef.current.getBoundingClientRect().left + window.scrollX}px` : '0px',
+            width: inputRef.current ? `${inputRef.current.getBoundingClientRect().width}px` : 'auto',
           }}
         >
           No options found
