@@ -53,6 +53,12 @@ export function Combobox({
         option.label.toLowerCase().includes(inputValue.toLowerCase()) ||
         option.value.toLowerCase().includes(inputValue.toLowerCase())
       )
+      // Debug logging for search
+      if (inputValue.toLowerCase().includes('sch')) {
+        console.log('🔍 Searching for:', inputValue);
+        console.log('🔍 All options:', options.map(o => o.label));
+        console.log('🔍 Filtered results:', filtered.map(o => o.label));
+      }
       setFilteredOptions(filtered)
     }
     setSelectedIndex(-1)
