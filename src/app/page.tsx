@@ -30,6 +30,20 @@ interface TrackedGuitar {
   createdAt: string;
 }
 
+// Fallback guitar brands list (matches backend database)
+const FALLBACK_GUITAR_BRANDS = [
+  "Fender", "Gibson", "Epiphone", "Ibanez", "Yamaha", "Taylor", "Martin", "PRS", "Schecter", "ESP",
+  "Jackson", "Charvel", "Gretsch", "Rickenbacker", "Guild", "Washburn", "Dean", "BC Rich", "Kramer", "Steinberger",
+  "Parker", "Music Man", "G&L", "Suhr", "Anderson", "Collings", "Santa Cruz", "Breedlove", "Seagull", "Art & Lutherie",
+  "Simon & Patrick", "Norman", "Godin", "Lag", "Takamine", "Ovation", "Alvarez", "Sigma", "Recording King", "Blueridge",
+  "Eastman", "Loar", "Kentucky", "Weber", "Deering", "Gold Tone", "Washburn", "Oscar Schmidt", "Rogue", "Luna",
+  "Daisy Rock", "First Act", "Squier", "Epiphone", "Ltd", "Jackson", "Charvel", "EVH", "Sterling", "OLP",
+  "Agile", "Douglas", "SX", "Harley Benton", "Monoprice", "Indio", "Rondo", "Xaviere", "Guitarfetish", "Saga",
+  "Johnson", "Silvertone", "Harmony", "Kay", "Teisco", "Airline", "Supro", "Danelectro", "National", "Dobro",
+  "Resonator", "Weissenborn", "Kala", "Cordoba", "Alhambra", "Ramirez", "Conde", "Hanika", "Kremona", "La Patrie",
+  "Admira", "Valencia", "Raimundo", "Manuel Rodriguez", "Jose Ramirez", "Francisco Esteve", "Antonio Sanchez"
+].sort();
+
 export default function Dashboard() {
   const router = useRouter();
   const [apiStatus, setApiStatus] = useState<string>('Checking...');
@@ -79,7 +93,13 @@ export default function Dashboard() {
         }));
         setBrandOptions(options);
       } catch (error) {
-        console.error('Error loading brands:', error);
+        console.error('Error loading brands from API, using fallback:', error);
+        // Use fallback brands when API is unavailable
+        const fallbackOptions = FALLBACK_GUITAR_BRANDS.map((brand: string) => ({
+          value: brand,
+          label: brand
+        }));
+        setBrandOptions(fallbackOptions);
       }
     };
     loadBrands();
