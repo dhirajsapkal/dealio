@@ -51,6 +51,8 @@ app.add_middleware(
         "http://127.0.0.1:3000",
         "http://127.0.0.1:3001",
         "http://127.0.0.1:3002",
+        "https://dealio-86nf2ukjs-dhirajsapkals-projects.vercel.app",  # New Vercel URL
+        "https://dealio-2ucr9b3cf-dhirajsapkals-projects.vercel.app",  # Original Vercel URL
         "https://*.vercel.app",  # Vercel deployment domains
         "https://dealio-*.vercel.app",  # Specific pattern for your app
         "*"  # Allow all origins for demo (remove in production)
