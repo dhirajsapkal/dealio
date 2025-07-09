@@ -15,7 +15,10 @@ import { Search, Guitar, Plus, TrendingUp, Clock, DollarSign, X, Trash2 } from '
 // Helper function to get the correct API URL
 const getApiUrl = () => {
   // Use environment variable for production/preview, with a fallback for local development.
-  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+  console.log('🔍 API URL being used:', apiUrl);
+  console.log('🔍 Environment variable NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
+  return apiUrl;
 };
 
 interface TrackedGuitar {
@@ -88,7 +91,11 @@ export default function Dashboard() {
   useEffect(() => {
     const loadBrands = async () => {
       try {
-        const response = await fetch(`${getApiUrl()}/guitars/brands`);
+        const apiUrl = getApiUrl();
+        const brandsUrl = `${apiUrl}/guitars/brands`;
+        console.log('🎸 Loading brands from:', brandsUrl);
+        const response = await fetch(brandsUrl);
+        console.log('🎸 Brands response status:', response.status);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -102,7 +109,7 @@ export default function Dashboard() {
         console.log('🎸 Brand options set:', options);
         setBrandOptions(options);
       } catch (error) {
-        console.error('Error loading brands from API:', error);
+        console.error('🎸 Error loading brands from API:', error);
         setBrandOptions([]); // Show empty instead of fallback
       }
     };
@@ -155,10 +162,15 @@ export default function Dashboard() {
   useEffect(() => {
     const testApiConnection = async () => {
       try {
-        const response = await fetch(`${getApiUrl()}/health`);
+        const apiUrl = getApiUrl();
+        console.log('🔍 Testing connection to:', `${apiUrl}/health`);
+        const response = await fetch(`${apiUrl}/health`);
+        console.log('🔍 Health check response status:', response.status);
         const data = await response.json();
+        console.log('🔍 Health check response data:', data);
         setApiStatus(data.status === 'ok' ? 'Connected' : 'Error');
       } catch (error) {
+        console.error('🔍 Health check failed:', error);
         setApiStatus('Offline');
       }
     };
