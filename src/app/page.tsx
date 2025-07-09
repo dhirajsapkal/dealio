@@ -40,6 +40,7 @@ interface TrackedGuitar {
 }
 
 // No fallback brands - always use API data
+// Force fresh deployment
 
 export default function Dashboard() {
   const router = useRouter();
