@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -54,10 +54,10 @@ interface ScrapingStatus {
 }
 
 /**
- * Guitar Detail Page
+ * Guitar Detail Page Component
  * Comprehensive view of a single tracked guitar with deal analysis and marketplace listings
  */
-export default function GuitarDetailPage() {
+function GuitarDetailPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -884,5 +884,23 @@ export default function GuitarDetailPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+/**
+ * Guitar Detail Page with Suspense Boundary
+ */
+export default function GuitarDetailPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="w-8 h-8 text-blue-500 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading guitar details...</p>
+        </div>
+      </div>
+    }>
+      <GuitarDetailPageContent />
+    </Suspense>
   );
 } 
