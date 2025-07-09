@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   /* config options here */
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || process.env.NODE_ENV === 'production' 
-      ? 'https://dealio-backend.onrender.com'  // Will be the Render URL
+      ? 'https://dealio-production-5f69.up.railway.app'  // Railway URL
       : 'http://localhost:8000'
   },
   eslint: {
