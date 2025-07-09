@@ -184,8 +184,8 @@ export default function Dashboard() {
       throw new Error('API must provide complete guitar data including image and specs');
     }
     
-    return {
-      marketPrice: data.market_price,
+        return {
+          marketPrice: data.market_price,
       dealsCount: data.listing_count || data.count,
       bestDealPrice: data.listings?.[0]?.price,
       imageUrl: data.guitar_image,
@@ -198,18 +198,18 @@ export default function Dashboard() {
       try {
         const marketData = await fetchGuitarMarketData(formData.brand, formData.model);
 
-        const newGuitar: TrackedGuitar = {
-          id: Math.random().toString(36).substr(2, 9),
-          type: formData.type as 'Electric' | 'Acoustic' | 'Bass',
-          brand: formData.brand,
-          model: formData.model,
-          createdAt: new Date().toISOString(),
-          ...marketData
-        };
-        
-        setTrackedGuitars([...trackedGuitars, newGuitar]);
-        setFormData({ type: '', brand: '', model: '' });
-        setIsAddModalOpen(false);
+      const newGuitar: TrackedGuitar = {
+        id: Math.random().toString(36).substr(2, 9),
+        type: formData.type as 'Electric' | 'Acoustic' | 'Bass',
+        brand: formData.brand,
+        model: formData.model,
+        createdAt: new Date().toISOString(),
+        ...marketData
+      };
+      
+      setTrackedGuitars([...trackedGuitars, newGuitar]);
+      setFormData({ type: '', brand: '', model: '' });
+      setIsAddModalOpen(false);
       } catch (error) {
         console.error('Failed to add guitar:', error);
         // TODO: Show error message to user
@@ -351,14 +351,14 @@ export default function Dashboard() {
                         <p className="text-sm text-amber-700">Loading brands from database...</p>
                       </div>
                     ) : (
-                      <Combobox
+                  <Combobox
                         key={`brand-${brandOptions.length}`}
-                        options={brandOptions}
-                        value={formData.brand}
-                        onValueChange={(value) => setFormData({...formData, brand: value, model: ''})}
+                    options={brandOptions}
+                    value={formData.brand}
+                    onValueChange={(value) => setFormData({...formData, brand: value, model: ''})}
                         placeholder="Type to search brands (e.g., Fender, Gibson, Schecter)..."
                         disabled={!formData.type}
-                      />
+                  />
                     )}
                     {formData.type && brandOptions.length > 0 && (
                       <p className="text-xs text-gray-500 mt-1">
@@ -382,28 +382,28 @@ export default function Dashboard() {
                         <p className="text-sm text-blue-700">Loading {formData.brand} models...</p>
                       </div>
                     ) : (
-                      <Combobox
-                        options={modelOptions}
-                        value={formData.model}
-                        onValueChange={(value) => setFormData({...formData, model: value})}
-                        placeholder={
-                          !formData.brand 
-                            ? "Select a brand first..." 
+                  <Combobox
+                    options={modelOptions}
+                    value={formData.model}
+                    onValueChange={(value) => setFormData({...formData, model: value})}
+                    placeholder={
+                      !formData.brand 
+                        ? "Select a brand first..." 
                             : modelOptions.length > 0
                               ? "Type to search models..."
                               : "Type any model name..."
-                        }
-                        disabled={!formData.brand || isLoadingModels}
-                      />
+                    }
+                    disabled={!formData.brand || isLoadingModels}
+                  />
                     )}
                     {formData.brand && !isLoadingModels && (
-                      <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-gray-500 mt-1">
                         {modelOptions.length > 0 
                           ? `${modelOptions.length} models found • You can also type a custom model name`
                           : "No predefined models found • Type any model name"
                         }
-                      </p>
-                    )}
+                    </p>
+                  )}
                   </div>
                 </div>
               </div>

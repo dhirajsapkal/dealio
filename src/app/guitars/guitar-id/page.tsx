@@ -200,8 +200,8 @@ function GuitarDetailPageContent() {
           
           return {
             id: listing.listing_id,
-            price: listing.price,
-            marketplace: listing.source,
+          price: listing.price,
+          marketplace: listing.source,
             sellerLocation: listing.seller_location,
             datePosted: listing.listed_date ? new Date(listing.listed_date).toLocaleDateString() : new Date().toLocaleDateString(),
             listingUrl: listing.url,
@@ -209,11 +209,11 @@ function GuitarDetailPageContent() {
             dealScore: listing.deal_score,
             sellerVerified: listing.seller_verified,
             description: listing.description,
-            sellerInfo: {
+          sellerInfo: {
               name: listing.seller_name,
               rating: listing.seller_rating,
               accountAge: listing.seller_account_age_days ? `${Math.floor(listing.seller_account_age_days / 365)} years` : 'New'
-            }
+          }
           };
         });
         
@@ -412,7 +412,7 @@ function GuitarDetailPageContent() {
                     <p className="text-sm text-gray-600">MSRP</p>
                     <p className="text-lg font-semibold">${guitarData.msrp}</p>
                   </div>
-                  <div>
+              <div>
                     <p className="text-sm text-gray-600">Avg. Market</p>
                     <p className="text-lg font-semibold">${guitarData.avgMarketPrice}</p>
                   </div>
@@ -426,11 +426,11 @@ function GuitarDetailPageContent() {
                         <p className="text-xl font-bold text-green-600">${dealListings[0].price}</p>
                         <p className="text-sm text-gray-500">
                           {getPriceChange(dealListings[0].price, guitarData.msrp)}% vs MSRP
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
               </CardContent>
             </Card>
 
@@ -452,23 +452,23 @@ function GuitarDetailPageContent() {
                     <div className="flex justify-between">
                       <dt className="text-sm text-gray-600">Neck</dt>
                       <dd className="text-sm font-medium">{guitarData.specs.neck}</dd>
-                    </div>
+                </div>
                     <div className="flex justify-between">
                       <dt className="text-sm text-gray-600">Fretboard</dt>
                       <dd className="text-sm font-medium">{guitarData.specs.fretboard}</dd>
-                    </div>
+              </div>
                     <div className="flex justify-between">
                       <dt className="text-sm text-gray-600">Pickups</dt>
                       <dd className="text-sm font-medium">{guitarData.specs.pickups}</dd>
-                    </div>
+                </div>
                     <div className="flex justify-between">
                       <dt className="text-sm text-gray-600">Scale Length</dt>
                       <dd className="text-sm font-medium">{guitarData.specs.scale}</dd>
-                    </div>
+                </div>
                     <div className="flex justify-between">
                       <dt className="text-sm text-gray-600">Frets</dt>
                       <dd className="text-sm font-medium">{guitarData.specs.frets}</dd>
-                    </div>
+              </div>
                   </dl>
                   
                   {guitarData.specs?.features && guitarData.specs.features.length > 0 && (
@@ -480,9 +480,9 @@ function GuitarDetailPageContent() {
                             {feature}
                           </Badge>
                         ))}
-                      </div>
-                    </div>
-                  )}
+            </div>
+          </div>
+        )}
                 </CardContent>
               </Card>
             )}
@@ -513,22 +513,22 @@ function GuitarDetailPageContent() {
                           <div className="space-y-2 flex-1">
                             <div className="h-4 bg-gray-200 rounded w-1/4"></div>
                             <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                          </div>
+              </div>
                           <div className="h-6 bg-gray-200 rounded w-16"></div>
-                        </div>
-                      </div>
+              </div>
+            </div>
                     ))}
-                  </div>
+        </div>
                 ) : dealListings.length === 0 ? (
                   <div className="text-center py-12">
-                    <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No Deals Found</h3>
-                    <p className="text-gray-600 mb-4">
+            <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Deals Found</h3>
+            <p className="text-gray-600 mb-4">
                       We couldn't find any listings for this guitar right now.
-                    </p>
+            </p>
                     <Button onClick={handleManualRefresh} variant="outline">
                       Try Again
-                    </Button>
+            </Button>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -576,8 +576,8 @@ function GuitarDetailPageContent() {
                                     <div className="flex items-center gap-1">
                                       <Star className="w-3 h-3 fill-current text-yellow-400" />
                                       {deal.sellerInfo.rating}
-                                    </div>
-                                  )}
+          </div>
+        )}
                                   <Calendar className="w-3 h-3" />
                                   {deal.datePosted}
                                 </div>
@@ -595,7 +595,7 @@ function GuitarDetailPageContent() {
                         </div>
                       </div>
                     ))}
-                  </div>
+            </div>
                 )}
               </CardContent>
             </Card>

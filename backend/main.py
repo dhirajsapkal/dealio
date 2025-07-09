@@ -635,9 +635,9 @@ async def get_guitar_models(brand: Optional[str] = None, guitar_type: Optional[s
         # If specific type requested, return only that type
         if guitar_type:
             matching_models = [m for m in models if m['type'].lower() == guitar_type.lower()]
-            return {
-                "brand": brand,
-                "type": guitar_type,
+        return {
+            "brand": brand,
+            "type": guitar_type,
                 "models": [m['name'] for m in matching_models],
                 "models_with_details": matching_models
             }
@@ -787,7 +787,7 @@ async def get_guitars_by_model(brand: str, model: str, ebay_api_key: Optional[st
                     specs_api = GuitarSpecsAPI()
                     try:
                         guitar_image = await specs_api.get_guitar_image(brand, model, guitar_type)
-                    except Exception as e:
+    except Exception as e:
                         logger.error(f"Error fetching guitar image: {e}")
                         guitar_image = specs_api._get_placeholder_image(guitar_type)
                         
@@ -823,16 +823,16 @@ async def get_guitars_by_model(brand: str, model: str, ebay_api_key: Optional[st
             api_status = "Reverb API not available"
         
         # Return error if no real listings found
-        if not all_listings:
+    if not all_listings:
             logger.error(f"No listings found for {brand} {model}. API status: {api_status}")
             raise HTTPException(status_code=404, detail=f"No real listings found for {brand} {model} on Reverb. {api_status}")
-        
+    
         # Calculate statistics from real data
-        prices = [listing["price"] for listing in all_listings if listing.get("price")]
-        if prices:
-            market_price = sum(prices) / len(prices)
+    prices = [listing["price"] for listing in all_listings if listing.get("price")]
+    if prices:
+        market_price = sum(prices) / len(prices)
             price_range = {"min": min(prices), "max": max(prices)}
-        else:
+    else:
             market_price = guitar_specs.get("msrp", 1200) * 0.75 if guitar_specs else 1200
             price_range = {"min": 0, "max": 0}
         
@@ -856,17 +856,17 @@ async def get_guitars_by_model(brand: str, model: str, ebay_api_key: Optional[st
                 "description": listing.get("description", f"{brand} {model} in {listing.get('condition', 'good')} condition")
             }
             formatted_listings.append(formatted_listing)
-
-        return {
-            "brand": brand,
-            "model": model,
-            "market_price": market_price,
+    
+    return {
+        "brand": brand,
+        "model": model,
+        "market_price": market_price,
             "price_range": price_range,
             "listings": formatted_listings,
             "listing_count": len(formatted_listings),
             "deal_categories": categorize_deals(formatted_listings, brand, model),
             "model_variants": [{"name": model, "msrp": guitar_specs.get("msrp", 1200) if guitar_specs else 1200}],
-            "data_sources": data_sources,
+        "data_sources": data_sources,
             "scraping_status": "success",
             "api_status": api_status,
             "message": f"Found {len(formatted_listings)} real listings for {brand} {model} from Reverb",
