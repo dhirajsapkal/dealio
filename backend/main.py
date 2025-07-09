@@ -68,13 +68,18 @@ async def get_guitar_brands():
 @app.get("/guitars/models", response_model=List[str])
 async def get_guitar_models(brand: str):
     logger.info(f"🎸 Models endpoint called with brand: '{brand}'")
-    models = get_models_for_brand(brand)
-    logger.info(f"🎸 Found {len(models) if models else 0} models for brand '{brand}': {models[:5] if models else 'None'}")
-    if not models:
+    models_data = get_models_for_brand(brand)
+    logger.info(f"🎸 Raw models data: {models_data[:3] if models_data else 'None'}")
+    
+    # Extract just the model names from the dictionaries
+    model_names = [model['name'] for model in models_data] if models_data else []
+    
+    logger.info(f"🎸 Found {len(model_names)} models for brand '{brand}': {model_names[:5] if model_names else 'None'}")
+    if not model_names:
         logger.warning(f"🎸 No models found for brand '{brand}' - returning 404")
         raise HTTPException(status_code=404, detail=f"No models found for brand '{brand}' or brand does not exist.")
-    logger.info(f"🎸 Returning {len(models)} models for brand '{brand}'")
-    return models
+    logger.info(f"🎸 Returning {len(model_names)} models for brand '{brand}'")
+    return model_names
 
 @app.get("/guitars/{brand}/{model}")
 async def search_for_guitar_deals(brand: str, model: str):
