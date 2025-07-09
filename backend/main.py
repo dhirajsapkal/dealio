@@ -37,9 +37,9 @@ from bs4 import BeautifulSoup
 # Import the comprehensive guitar database
 # This module provides a foundational dataset of guitar information, including brands, models, types, and price ranges.
 from guitar_database import (
-    get_all_brands,
-    get_models_for_brand,
-    search_guitars,
+    get_all_brands, 
+    get_models_for_brand, 
+    search_guitars, 
     get_guitar_info,
     get_guitars_by_type,
     get_guitars_by_price_range,
@@ -126,11 +126,11 @@ def standardize_listing(listing: Dict, source: str) -> Dict:
     This function ensures that data from different sources (like Reverb) is consistent,
     making it easier for the frontend to process and display. It extracts key information
     like price, condition, and seller details, and handles missing data gracefully.
-
+    
     Args:
         listing (Dict): The raw listing data from a source API (e.g., Reverb).
         source (str): The name of the marketplace (e.g., "Reverb").
-
+    
     Returns:
         Dict: A dictionary containing the standardized listing data.
     """
@@ -176,12 +176,12 @@ def categorize_deals(listings: List[Dict], brand: str, model: str) -> Dict:
     This function takes a list of standardized listings and sorts them into categories
     like "Best Value," "Cheapest," "Highest Quality," and "Most Recent." This helps users
     quickly identify the most interesting deals.
-
+    
     Args:
         listings (List[Dict]): A list of standardized listing dictionaries.
         brand (str): The guitar brand being searched.
         model (str): The guitar model being searched.
-
+    
     Returns:
         Dict: A dictionary containing categorized lists of deals. Returns an empty dict if no listings are provided.
     """
@@ -299,9 +299,13 @@ async def get_guitar_models(brand: str):
     Raises:
         HTTPException: 404 if the brand is not found or has no models.
     """
+    logger.info(f"🎸 Models endpoint called with brand: '{brand}'")
     models = get_models_for_brand(brand)
+    logger.info(f"🎸 Found {len(models) if models else 0} models for brand '{brand}': {models[:5] if models else 'None'}")
     if not models:
+        logger.warning(f"🎸 No models found for brand '{brand}' - returning 404")
         raise HTTPException(status_code=404, detail=f"No models found for brand '{brand}' or brand does not exist.")
+    logger.info(f"🎸 Returning {len(models)} models for brand '{brand}'")
     return models
 
 # --- Core Deal Search Endpoint ---
