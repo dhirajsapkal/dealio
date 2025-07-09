@@ -103,6 +103,56 @@ GUITAR_MODEL_DATABASE = {
             "Standard": {"msrp": 2499, "features": ["mahogany body", "maple cap", "burstbucker pro pickups"], "rating": 4.8, "tier": "high"},
             "Traditional": {"msrp": 2299, "features": ["mahogany body", "maple cap", "burstbucker pickups"], "rating": 4.7, "tier": "high"}
         }
+    },
+    "Schecter": {
+        "Solo": {
+            "Solo 2 Custom": {"msrp": 1199, "features": ["mahogany body", "quilted maple cap", "seymour duncan pickups", "locking tuners", "coil tap"], "rating": 4.7, "tier": "high"},
+            "Solo 6": {"msrp": 899, "features": ["mahogany body", "duncan designed pickups", "tune-o-matic bridge"], "rating": 4.4, "tier": "mid"},
+            "Solo 6 Stealth": {"msrp": 949, "features": ["mahogany body", "active pickups", "black hardware", "ebony fretboard"], "rating": 4.5, "tier": "mid-high"}
+        },
+        "Hellraiser": {
+            "Hellraiser C-1": {"msrp": 1049, "features": ["mahogany body", "quilted maple cap", "emg 81/85 pickups", "abalone binding"], "rating": 4.6, "tier": "mid-high"},
+            "Hellraiser C-7": {"msrp": 1149, "features": ["7-string", "mahogany body", "emg 707 pickups", "24 frets"], "rating": 4.5, "tier": "mid-high"},
+            "Hellraiser Hybrid C-1": {"msrp": 1199, "features": ["mahogany body", "emg fishman fluence pickups", "coil tap"], "rating": 4.7, "tier": "high"},
+            "Hellraiser Extreme": {"msrp": 899, "features": ["basswood body", "emg hz pickups", "floyd rose"], "rating": 4.3, "tier": "mid"}
+        },
+        "Omen": {
+            "Omen 6": {"msrp": 449, "features": ["basswood body", "diamond series pickups", "rosewood fretboard"], "rating": 4.1, "tier": "entry"},
+            "Omen 7": {"msrp": 499, "features": ["7-string", "basswood body", "diamond series pickups"], "rating": 4.0, "tier": "entry"},
+            "Omen Elite": {"msrp": 649, "features": ["mahogany body", "quilted maple veneer", "diamond plus pickups"], "rating": 4.3, "tier": "mid"},
+            "Omen Extreme": {"msrp": 549, "features": ["basswood body", "floyd rose special", "diamond series pickups"], "rating": 4.2, "tier": "entry"}
+        },
+        "C Series": {
+            "C-1 Classic": {"msrp": 799, "features": ["mahogany body", "seymour duncan jb/59 pickups", "tune-o-matic bridge"], "rating": 4.4, "tier": "mid"},
+            "C-1 Platinum": {"msrp": 949, "features": ["mahogany body", "seymour duncan full shred pickups", "grover tuners"], "rating": 4.5, "tier": "mid-high"},
+            "C-1 SLS Elite": {"msrp": 1399, "features": ["swamp ash body", "fishman fluence pickups", "hipshot bridge"], "rating": 4.8, "tier": "high"},
+            "C-7 Multiscale": {"msrp": 1299, "features": ["7-string", "multiscale fretboard", "fishman fluence pickups"], "rating": 4.7, "tier": "high"}
+        },
+        "Damien": {
+            "Damien 6": {"msrp": 399, "features": ["basswood body", "diamond series pickups", "licensed floyd rose"], "rating": 3.9, "tier": "entry"},
+            "Damien 7": {"msrp": 449, "features": ["7-string", "basswood body", "diamond series pickups"], "rating": 3.8, "tier": "entry"},
+            "Damien Elite": {"msrp": 549, "features": ["mahogany body", "diamond plus pickups", "black cherry finish"], "rating": 4.1, "tier": "entry"},
+            "Damien Platinum": {"msrp": 699, "features": ["mahogany body", "seymour duncan pickups", "grover tuners"], "rating": 4.3, "tier": "mid"}
+        },
+        "Banshee": {
+            "Banshee 6": {"msrp": 949, "features": ["mahogany body", "seymour duncan pickups", "hipshot bridge"], "rating": 4.5, "tier": "mid-high"},
+            "Banshee 7": {"msrp": 1049, "features": ["7-string", "mahogany body", "seymour duncan nazgul/sentient"], "rating": 4.4, "tier": "mid-high"},
+            "Banshee Elite": {"msrp": 1199, "features": ["swamp ash body", "fishman fluence pickups", "luminlay inlays"], "rating": 4.6, "tier": "high"},
+            "Banshee Mach": {"msrp": 1399, "features": ["basswood body", "bare knuckle pickups", "evertune bridge"], "rating": 4.7, "tier": "high"}
+        },
+        "Nick Johnston": {
+            "Traditional HSS": {"msrp": 1299, "features": ["alder body", "seymour duncan nick johnston pickups", "vintage tremolo"], "rating": 4.8, "tier": "high"},
+            "Atomic Coral": {"msrp": 1399, "features": ["alder body", "custom finish", "seymour duncan pickups", "roasted maple neck"], "rating": 4.9, "tier": "high"},
+            "Sunset Burst": {"msrp": 1349, "features": ["alder body", "flame maple cap", "seymour duncan pickups"], "rating": 4.8, "tier": "high"}
+        },
+        "Sun Valley": {
+            "Super Shredder": {"msrp": 2199, "features": ["mahogany body", "flame maple cap", "bareknuckle pickups", "hipshot bridge"], "rating": 4.9, "tier": "premium"},
+            "Super Shredder FR": {"msrp": 2299, "features": ["mahogany body", "floyd rose original", "bareknuckle pickups"], "rating": 4.8, "tier": "premium"}
+        },
+        "Reaper": {
+            "Reaper 6": {"msrp": 599, "features": ["basswood body", "diamond plus pickups", "string-thru bridge"], "rating": 4.2, "tier": "mid"},
+            "Reaper 7": {"msrp": 649, "features": ["7-string", "basswood body", "diamond plus pickups"], "rating": 4.1, "tier": "mid"}
+        }
     }
 }
 
