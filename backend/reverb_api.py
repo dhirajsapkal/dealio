@@ -335,17 +335,19 @@ async def search_reverb_guitars(brand: str, model: str, max_results: int = 20) -
     return await api.search_guitars(brand, model, max_results)
 
 def search_reverb_guitars_sync(brand: str, model: str, max_results: int = 20) -> List[Dict]:
-    """Synchronous wrapper for compatibility"""
+    """Synchronous wrapper for compatibility - uses thread executor to avoid event loop conflicts"""
+    import concurrent.futures
+    import threading
+    
+    def run_async_search():
+        """Run the async search in a new event loop"""
+        return asyncio.run(search_reverb_guitars(brand, model, max_results))
+    
     try:
-        # Check if there's already an event loop running
-        try:
-            loop = asyncio.get_running_loop()
-            # Event loop is running, can't use run_until_complete
-            logger.warning("Event loop already running, skipping Reverb search for now")
-            return []
-        except RuntimeError:
-            # No event loop running, safe to create one
-            return asyncio.run(search_reverb_guitars(brand, model, max_results))
+        # Use ThreadPoolExecutor to run the async code in a separate thread
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(run_async_search)
+            return future.result(timeout=30)  # 30 second timeout
     except Exception as e:
         logger.error(f"Error in sync Reverb search: {e}")
         return []

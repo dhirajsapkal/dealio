@@ -14,11 +14,11 @@ import { Search, Guitar, Plus, TrendingUp, Clock, DollarSign, X, Trash2 } from '
 
 // Helper function to get the correct API URL
 const getApiUrl = () => {
-  // Always use the production backend for now since we have a working API
-  return 'https://dealio-backend.onrender.com';
+  // Use local backend for development testing
+  return 'http://localhost:8000';
   
-  // Alternative: Use environment variable with production fallback
-  // return process.env.NEXT_PUBLIC_API_URL || 'https://dealio-backend.onrender.com';
+  // Alternative: Use environment variable with local fallback
+  // return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 };
 
 interface TrackedGuitar {
@@ -35,6 +35,14 @@ interface TrackedGuitar {
     retailer: string;
     date: string;
     dealScore?: number;
+  };
+  specs?: {
+    msrp?: number;
+    body?: string;
+    neck?: string;
+    fretboard?: string;
+    pickups?: string;
+    type?: string;
   };
   createdAt: string;
 }
@@ -160,65 +168,52 @@ export default function Dashboard() {
     testApiConnection();
   }, []);
 
-  const getGuitarImage = async (brand: string, model: string): Promise<string | undefined> => {
-    try {
-      // Use a guitar image service or fallback to a placeholder
-      // For now, we'll use a placeholder service that generates images based on text
-      const query = encodeURIComponent(`${brand} ${model} guitar`);
-      const imageUrl = `https://images.unsplash.com/400x300/?${query}`;
-      
-      // Test if the image exists by trying to fetch it
-      const response = await fetch(imageUrl, { method: 'HEAD' });
-      if (response.ok) {
-        return imageUrl;
-      }
-    } catch (error) {
-      console.error('Error fetching guitar image:', error);
-    }
-    
-    // Fallback to a generic guitar image
-    return `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop&crop=center`;
-  };
+
 
   const fetchGuitarMarketData = async (brand: string, model: string) => {
-    try {
-              const response = await fetch(`${getApiUrl()}/guitars/${encodeURIComponent(brand)}/${encodeURIComponent(model)}`);
-      if (response.ok) {
-        const data = await response.json();
-        return {
-          marketPrice: data.market_price,
-          dealsCount: data.count,
-          bestDealPrice: data.listings?.[0]?.price
-        };
-      }
-    } catch (error) {
-      console.error('Error fetching market data:', error);
+    const response = await fetch(`${getApiUrl()}/guitars/${encodeURIComponent(brand)}/${encodeURIComponent(model)}`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch guitar data: ${response.status}`);
     }
-    return {};
+    
+    const data = await response.json();
+    
+    // Require complete data from API
+    if (!data.market_price || !data.guitar_image || !data.guitar_specs) {
+      throw new Error('API must provide complete guitar data including image and specs');
+    }
+    
+    return {
+      marketPrice: data.market_price,
+      dealsCount: data.listing_count || data.count,
+      bestDealPrice: data.listings?.[0]?.price,
+      imageUrl: data.guitar_image,
+      specs: data.guitar_specs
+    };
   };
 
   const handleAddGuitar = async () => {
     if (formData.type && formData.brand && formData.model) {
-      // Show loading state or disable button here if needed
-      
-      const [imageUrl, marketData] = await Promise.all([
-        getGuitarImage(formData.brand, formData.model),
-        fetchGuitarMarketData(formData.brand, formData.model)
-      ]);
+      try {
+        const marketData = await fetchGuitarMarketData(formData.brand, formData.model);
 
-      const newGuitar: TrackedGuitar = {
-        id: Math.random().toString(36).substr(2, 9),
-        type: formData.type as 'Electric' | 'Acoustic' | 'Bass',
-        brand: formData.brand,
-        model: formData.model,
-        imageUrl,
-        createdAt: new Date().toISOString(),
-        ...marketData
-      };
-      
-      setTrackedGuitars([...trackedGuitars, newGuitar]);
-      setFormData({ type: '', brand: '', model: '' });
-      setIsAddModalOpen(false);
+        const newGuitar: TrackedGuitar = {
+          id: Math.random().toString(36).substr(2, 9),
+          type: formData.type as 'Electric' | 'Acoustic' | 'Bass',
+          brand: formData.brand,
+          model: formData.model,
+          createdAt: new Date().toISOString(),
+          ...marketData
+        };
+        
+        setTrackedGuitars([...trackedGuitars, newGuitar]);
+        setFormData({ type: '', brand: '', model: '' });
+        setIsAddModalOpen(false);
+      } catch (error) {
+        console.error('Failed to add guitar:', error);
+        // TODO: Show error message to user
+      }
     }
   };
 

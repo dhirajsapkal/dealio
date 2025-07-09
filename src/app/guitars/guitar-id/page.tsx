@@ -63,7 +63,7 @@ interface ScrapingStatus {
 
 // Helper function to get the correct API URL
 const getApiUrl = () => {
-  return 'https://dealio-backend.onrender.com';
+  return 'http://localhost:8000';
 };
 
 function GuitarDetailPageContent() {
@@ -100,15 +100,22 @@ function GuitarDetailPageContent() {
             const guitars = JSON.parse(storedGuitars);
             const guitar = guitars[0];
             if (guitar) {
+              // Only use stored data if it has real market data
+              if (!guitar.marketPrice) {
+                setError('No market data available for this guitar. Please search again.');
+                setLoading(false);
+                return;
+              }
+              
               const guitarData = {
                 id: guitar.id,
                 brand: guitar.brand,
                 model: guitar.model,
                 type: guitar.type,
-                msrp: 1200,
-                avgMarketPrice: guitar.marketPrice || 900,
+                msrp: guitar.specs?.msrp || guitar.marketPrice * 1.3,
+                avgMarketPrice: guitar.marketPrice,
                 imageUrl: guitar.imageUrl,
-                tier: 'Standard'
+                tier: guitar.specs?.tier || 'Standard'
               };
               setGuitarData(guitarData);
               setLoading(false);
@@ -121,15 +128,15 @@ function GuitarDetailPageContent() {
           return;
         }
 
-        // Create guitar data from URL params
+        // Create minimal guitar data - all real data will come from API
         const guitar: GuitarData = {
           id: `${brand.toLowerCase()}-${model.toLowerCase()}`,
           brand,
           model,
           type: type as 'Electric' | 'Acoustic' | 'Bass',
-          msrp: 1200, // Will be updated from API
-          avgMarketPrice: 900, // Will be updated from API
-          tier: 'Standard'
+          msrp: 0, // Must be updated from API
+          avgMarketPrice: 0, // Must be updated from API
+          tier: 'Unknown'
         };
 
         setGuitarData(guitar);
@@ -156,42 +163,59 @@ function GuitarDetailPageContent() {
       if (response.ok) {
         const data = await response.json();
         
-        // Update guitar data with API info
+        // Update guitar data with API info - require real data
+        if (!data.market_price || !data.guitar_specs) {
+          throw new Error('API must provide complete guitar data including specs and market price');
+        }
+        
         setGuitarData(prev => prev ? {
           ...prev,
-          avgMarketPrice: data.market_price || 900,
-          msrp: data.market_price ? data.market_price * 1.3 : 1200,
+          avgMarketPrice: data.market_price,
+          msrp: data.guitar_specs.msrp,
+          imageUrl: data.guitar_image,
+          tier: data.guitar_specs.tier,
           specs: {
-            body: 'Mahogany',
-            neck: 'Maple',
-            fretboard: 'Rosewood',
-            pickups: 'Humbucker',
-            hardware: 'Chrome',
-            finish: 'Gloss',
-            scale: '25.5"',
-            frets: 22,
-            features: ['Coil Tap', 'Locking Tuners']
+            body: data.guitar_specs.body,
+            neck: data.guitar_specs.neck,
+            fretboard: data.guitar_specs.fretboard,
+            pickups: data.guitar_specs.pickups,
+            hardware: data.guitar_specs.hardware,
+            finish: data.guitar_specs.finish,
+            scale: data.guitar_specs.scale_length,
+            frets: data.guitar_specs.frets,
+            features: data.guitar_specs.features
           }
         } : null);
         
-        // Process listings and sort by deal score
-        const allListings: DealListing[] = data.listings?.map((listing: any, index: number) => ({
-          id: listing.listing_id || `deal-${index}`,
-          price: listing.price,
-          marketplace: listing.source,
-          sellerLocation: listing.seller_location || 'Unknown',
-          datePosted: listing.listed_date ? new Date(listing.listed_date).toLocaleDateString() : 'Recently',
-          listingUrl: listing.url || '#',
-          condition: listing.condition || 'Good',
-          dealScore: listing.deal_score || Math.floor(Math.random() * 40) + 60, // Fallback random score
-          sellerVerified: listing.seller_verified || false,
-          description: listing.description || '',
-          sellerInfo: {
-            name: listing.seller_name || 'Unknown Seller',
-            rating: listing.seller_rating || 0,
-            accountAge: listing.seller_account_age_days ? `${Math.floor(listing.seller_account_age_days / 365)} years` : 'Unknown'
+        // Process listings - require real data only
+        if (!data.listings || !Array.isArray(data.listings)) {
+          throw new Error('API must provide real listings data');
+        }
+        
+        const allListings: DealListing[] = data.listings.map((listing: any, index: number) => {
+          // Validate required fields
+          if (!listing.listing_id || !listing.price || !listing.source || !listing.url) {
+            throw new Error('Invalid listing data - missing required fields');
           }
-        })) || [];
+          
+          return {
+            id: listing.listing_id,
+            price: listing.price,
+            marketplace: listing.source,
+            sellerLocation: listing.seller_location,
+            datePosted: listing.listed_date ? new Date(listing.listed_date).toLocaleDateString() : new Date().toLocaleDateString(),
+            listingUrl: listing.url,
+            condition: listing.condition,
+            dealScore: listing.deal_score,
+            sellerVerified: listing.seller_verified,
+            description: listing.description,
+            sellerInfo: {
+              name: listing.seller_name,
+              rating: listing.seller_rating,
+              accountAge: listing.seller_account_age_days ? `${Math.floor(listing.seller_account_age_days / 365)} years` : 'New'
+            }
+          };
+        });
         
         // Sort by deal score (highest first)
         allListings.sort((a, b) => b.dealScore - a.dealScore);
@@ -298,11 +322,11 @@ function GuitarDetailPageContent() {
             <div className="flex items-center gap-4">
               <Button 
                 variant="ghost" 
-                onClick={() => router.back()}
+                onClick={() => router.push('/')}
                 className="flex items-center gap-2"
               >
                 <ArrowLeft className="w-4 h-4" />
-                Back
+                Back to Dashboard
               </Button>
               <div className="h-6 w-px bg-gray-300"></div>
               <h1 className="text-2xl font-bold text-gray-900">
@@ -447,7 +471,7 @@ function GuitarDetailPageContent() {
                     </div>
                   </dl>
                   
-                  {guitarData.specs.features.length > 0 && (
+                  {guitarData.specs?.features && guitarData.specs.features.length > 0 && (
                     <div className="mt-4 pt-3 border-t">
                       <p className="text-sm text-gray-600 mb-2">Key Features</p>
                       <div className="flex flex-wrap gap-1">

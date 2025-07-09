@@ -8,6 +8,7 @@ import aiohttp
 import asyncio
 import os
 import json
+import random
 from datetime import datetime
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -25,22 +26,22 @@ from guitar_database import (
     GUITAR_DATABASE
 )
 
-# Import the new dynamic systems
-try:
-    from dynamic_deals_generator import generate_guitar_deals, get_deal_summary_stats
-    from guitar_specs_api import get_guitar_specs_sync
-    DYNAMIC_DEALS_AVAILABLE = True
-except ImportError as e:
-    logger.warning(f"Dynamic deals system not available: {e}")
-    DYNAMIC_DEALS_AVAILABLE = False
-
 # Set up logging first
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Import guitar specs API
+try:
+    from guitar_specs_api import get_guitar_specs_sync
+    GUITAR_SPECS_AVAILABLE = True
+    logger.info("Guitar specs API available")
+except ImportError as e:
+    GUITAR_SPECS_AVAILABLE = False
+    logger.warning(f"Guitar specs API not available: {e}")
+
 # Import Reverb API for real marketplace data
 try:
-    from reverb_api import search_reverb_guitars
+    from reverb_api import search_reverb_guitars_sync
     REVERB_API_AVAILABLE = True
     logger.info("Reverb API integration available")
 except ImportError as e:
@@ -763,169 +764,115 @@ async def get_best_deals(min_score: int = 70):
 
 @app.get("/guitars/{brand}/{model}")
 async def get_guitars_by_model(brand: str, model: str, ebay_api_key: Optional[str] = None):
-    """Get guitar listings for a specific brand and model with dynamic deal generation."""
+    """Get guitar listings for a specific brand and model from real Reverb marketplace data."""
     
     logger.info(f"Getting guitars for {brand} {model}")
     
     try:
-        # TEMPORARY: Return simple test data to verify the API works
-        reverb_listings = []
-        guitar_specs = {
-            "brand": brand,
-            "model": model,
-            "type": "Electric",
-            "msrp": 2800,
-            "body": "Mahogany",
-            "neck": "Mahogany",
-            "fretboard": "Rosewood",
-            "pickups": "490R/498T Humbuckers"
-        }
+        # Get guitar specifications first
+        guitar_specs = None
+        guitar_image = None
         
-        # Get guitar image URL
-        guitar_type = guitar_specs.get("type", "Electric") if guitar_specs else "Electric"
-        placeholders = {
-            "Electric": "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400",
-            "Acoustic": "https://images.unsplash.com/photo-1516924962500-2b4b3b99ea02?w=400",  
-            "Bass": "https://images.unsplash.com/photo-1550985068-687d5a0b590b?w=400"
-        }
-        guitar_image = placeholders.get(guitar_type, placeholders["Electric"])  # Default for now
+        if GUITAR_SPECS_AVAILABLE:
+            try:
+                guitar_specs = get_guitar_specs_sync(brand, model)
+                logger.info(f"Got guitar specs: {guitar_specs}")
+                
+                # Get guitar image
+                guitar_image = guitar_specs.get("imageUrl")
+                if not guitar_image:
+                    # Fall back to Unsplash API if not provided
+                    guitar_type = guitar_specs.get("type", "Electric")
+                    from guitar_specs_api import GuitarSpecsAPI
+                    specs_api = GuitarSpecsAPI()
+                    try:
+                        guitar_image = await specs_api.get_guitar_image(brand, model, guitar_type)
+                    except Exception as e:
+                        logger.error(f"Error fetching guitar image: {e}")
+                        guitar_image = specs_api._get_placeholder_image(guitar_type)
+                        
+            except Exception as e:
+                logger.error(f"Error getting guitar specs: {e}")
         
-        # TODO: Re-enable Unsplash integration after fixing async event loop conflicts
-        # try:
-        #     from guitar_specs_api import GuitarSpecsAPI
-        #     specs_api = GuitarSpecsAPI()
-        #     guitar_image = await specs_api.get_guitar_image(brand, model, guitar_specs.get("type", "Electric"))
-        # except Exception as e:
-        #     logger.warning(f"Could not fetch guitar image: {e}")
+        # Get real Reverb listings
+        all_listings = []
+        data_sources = []
         
-        # Create simple test deals
-        all_listings = [
-            {
-                "listing_id": "test_1",
-                "title": f"{brand} {model} Electric Guitar",
-                "price": 2100,
-                "condition": "Excellent",
-                "source": "Test Data",
-                "url": "https://example.com/guitar1",
-                "seller_location": "Los Angeles, CA",
-                "deal_score": 75,
-                "specific_model": f"{brand} {model} Standard"
-            },
-            {
-                "listing_id": "test_2", 
-                "title": f"{brand} {model} Guitar - Great Condition",
-                "price": 1850,
-                "condition": "Very Good",
-                "source": "Test Data",
-                "url": "https://example.com/guitar2", 
-                "seller_location": "Nashville, TN",
-                "deal_score": 85,
-                "specific_model": f"{brand} {model} Studio"
-            }
-        ]
-        data_sources = ["Test Data"]
-        api_status = "Test mode - sample guitar listings"
+        if REVERB_API_AVAILABLE:
+            try:
+                logger.info(f"Searching Reverb for real listings: {brand} {model}")
+                reverb_listings = search_reverb_guitars_sync(brand, model, max_results=25)
+                logger.info(f"Found {len(reverb_listings)} Reverb listings")
+                
+                if reverb_listings:
+                    logger.info(f"Sample listing: {reverb_listings[0]}")
+                    all_listings = reverb_listings
+                    data_sources = ["Reverb"]
+                    api_status = f"Found {len(reverb_listings)} real Reverb listings"
+                else:
+                    logger.warning(f"No listings returned from Reverb API for {brand} {model}")
+                    api_status = "No listings found on Reverb"
+                
+            except Exception as e:
+                logger.error(f"Error getting Reverb data: {e}")
+                import traceback
+                traceback.print_exc()
+                api_status = f"Reverb API error: {str(e)}"
+        else:
+            logger.warning("Reverb API not available")
+            api_status = "Reverb API not available"
         
-        # Calculate statistics
-        if all_listings:
-            prices = [listing["price"] for listing in all_listings]
-            market_price = guitar_specs.get("msrp", sum(prices) / len(prices)) * 0.75 if guitar_specs else sum(prices) / len(prices)
+        # Return error if no real listings found
+        if not all_listings:
+            logger.error(f"No listings found for {brand} {model}. API status: {api_status}")
+            raise HTTPException(status_code=404, detail=f"No real listings found for {brand} {model} on Reverb. {api_status}")
+        
+        # Calculate statistics from real data
+        prices = [listing["price"] for listing in all_listings if listing.get("price")]
+        if prices:
+            market_price = sum(prices) / len(prices)
             price_range = {"min": min(prices), "max": max(prices)}
-            
-            # Get deal statistics - temporarily disabled
-            deal_stats = {}
         else:
             market_price = guitar_specs.get("msrp", 1200) * 0.75 if guitar_specs else 1200
             price_range = {"min": 0, "max": 0}
-            deal_stats = {}
         
+        # Convert listing format to match frontend expectations
+        formatted_listings = []
+        for listing in all_listings:
+            formatted_listing = {
+                "listing_id": listing.get("id", listing.get("listing_id", f"reverb-{random.randint(1000,9999)}")),
+                "title": listing.get("description", f"{brand} {model}"),
+                "price": listing.get("price", 0),
+                "condition": listing.get("condition", "Good"),
+                "source": "Reverb",
+                "url": listing.get("listingUrl", listing.get("url", "#")),
+                "seller_location": listing.get("sellerLocation", listing.get("seller_location", "Unknown")),
+                "deal_score": listing.get("dealScore", listing.get("deal_score", 50)),
+                "seller_verified": listing.get("sellerVerified", listing.get("seller_verified", False)),
+                "listed_date": listing.get("datePosted", listing.get("listed_date", datetime.now().strftime("%Y-%m-%d"))),
+                "seller_name": listing.get("sellerInfo", {}).get("name", "Unknown") if listing.get("sellerInfo") else "Unknown",
+                "seller_rating": listing.get("sellerInfo", {}).get("rating", 0) if listing.get("sellerInfo") else 0,
+                "seller_account_age_days": 365 if listing.get("sellerInfo") else 365,
+                "description": listing.get("description", f"{brand} {model} in {listing.get('condition', 'good')} condition")
+            }
+            formatted_listings.append(formatted_listing)
+
         return {
             "brand": brand,
             "model": model,
             "market_price": market_price,
             "price_range": price_range,
-            "listings": all_listings,
-            "listing_count": len(all_listings),
-            "deal_categories": {},  # Will be enhanced later
+            "listings": formatted_listings,
+            "listing_count": len(formatted_listings),
+            "deal_categories": categorize_deals(formatted_listings, brand, model),
             "model_variants": [{"name": model, "msrp": guitar_specs.get("msrp", 1200) if guitar_specs else 1200}],
             "data_sources": data_sources,
             "scraping_status": "success",
             "api_status": api_status,
-            "message": f"Found {len(all_listings)} listings for {brand} {model} from {', '.join(data_sources)}",
+            "message": f"Found {len(formatted_listings)} real listings for {brand} {model} from Reverb",
             "guitar_specs": guitar_specs,
             "guitar_image": guitar_image,
-            "deal_statistics": deal_stats,
-            "has_real_data": len(reverb_listings) > 0
-        }
-        
-        # Fallback to original system if dynamic system unavailable
-        logger.info(f"Falling back to original system for {brand} {model}")
-        
-        # Get eBay API key from environment if not provided in query
-        if not ebay_api_key:
-            ebay_api_key = os.getenv("EBAY_API_KEY")
-        
-        # Aggregate listings from all sources using real scrapers
-        try:
-            all_listings = await aggregate_all_listings(brand, model, ebay_api_key)
-            scraping_status = "success"
-            scraping_message = f"Successfully scraped listings for {brand} {model}"
-        except Exception as e:
-            logger.error(f"Error aggregating listings: {e}")
-            all_listings = []
-            scraping_status = "failed"
-            scraping_message = f"Scraping failed: {str(e)}. This is expected as many sites block scraping. We're working on API integrations."
-        
-        if not all_listings:
-            # Return empty structure instead of 404 to show "no deals found" state
-            return {
-                "brand": brand,
-                "model": model,
-                "market_price": get_estimated_market_price(brand, model),
-                "price_range": {"min": 0, "max": 0},
-                "listings": [],
-                "listing_count": 0,
-                "deal_categories": {},
-                "model_variants": get_model_variants(brand, model),
-                "data_sources": [],
-                "scraping_status": scraping_status,
-                "api_status": scraping_message,
-                "message": f"No listings found for {brand} {model}. This is normal as most marketplaces block automated scraping. Try checking the sites manually or wait for our API integrations."
-            }
-        
-        # Calculate market statistics
-        prices = [listing["price"] for listing in all_listings if listing.get("price")]
-        if prices:
-            market_price = sum(prices) / len(prices)
-            lowest_price = min(prices)
-            highest_price = max(prices)
-        else:
-            market_price = 600.0
-            lowest_price = 0
-            highest_price = 0
-        
-        # Enhanced deal categorization
-        deal_categories = categorize_deals(all_listings, brand, model)
-        
-        # Determine data sources used
-        data_sources = list(set([listing.get("source", "demo") for listing in all_listings]))
-        
-        return {
-            "brand": brand,
-            "model": model,
-            "market_price": market_price,
-            "price_range": {
-                "min": lowest_price,
-                "max": highest_price
-            },
-            "listings": all_listings,
-            "listing_count": len(all_listings),
-            "deal_categories": deal_categories,
-            "model_variants": get_model_variants(brand, model),
-            "data_sources": data_sources,
-            "scraping_status": scraping_status,
-            "api_status": f"Fetched from {len(data_sources)} sources: {', '.join(data_sources)}",
-            "message": scraping_message
+            "has_real_data": True
         }
         
     except Exception as e:

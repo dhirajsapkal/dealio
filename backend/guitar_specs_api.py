@@ -433,6 +433,9 @@ def _get_basic_guitar_specs(brand: str, model: str) -> Dict:
     guitar_type = api._infer_guitar_type(model)
     msrp = api._estimate_msrp(brand, model)
     
+    # Include a placeholder image URL for now
+    guitar_image = api._get_placeholder_image(guitar_type)
+    
     return {
         "brand": brand,
         "model": model,
@@ -451,5 +454,6 @@ def _get_basic_guitar_specs(brand: str, model: str) -> Dict:
         "country_of_origin": api._get_country_of_origin(brand),
         "year_introduced": api._estimate_year_introduced(brand, model),
         "tier": api._determine_tier(brand, model),
-        "description": api._generate_description(brand, model)
+        "description": api._generate_description(brand, model),
+        "imageUrl": guitar_image
     } 
