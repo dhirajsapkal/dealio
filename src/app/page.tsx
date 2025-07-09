@@ -337,7 +337,12 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
             </DialogTrigger>
-            <DialogContent className="w-[calc(100vw-20px)] max-w-[calc(100vw-20px)] h-[calc(100vh-20px)] max-h-[calc(100vh-20px)] sm:w-[85vw] sm:max-w-lg sm:h-auto sm:max-h-[calc(100vh-2rem)] overflow-y-auto flex flex-col">
+            <DialogContent className="
+              fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50
+              w-[calc(100vw-20px)] h-[calc(100vh-20px)] max-w-[calc(100vw-20px)] max-h-[calc(100vh-20px)]
+              sm:w-[85vw] sm:max-w-lg sm:h-auto sm:max-h-[calc(100vh-2rem)]
+              overflow-y-auto flex flex-col
+            ">
               <DialogHeader className="flex-shrink-0">
                 <DialogTitle className="flex items-center gap-2">
                   <Guitar className="w-5 h-5 text-teal-600" />
