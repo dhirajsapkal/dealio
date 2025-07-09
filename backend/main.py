@@ -34,6 +34,15 @@ except ImportError as e:
     logger.warning(f"Dynamic deals system not available: {e}")
     DYNAMIC_DEALS_AVAILABLE = False
 
+# Import Reverb API for real marketplace data
+try:
+    from reverb_api import search_reverb_guitars
+    REVERB_API_AVAILABLE = True
+    logger.info("Reverb API integration available")
+except ImportError as e:
+    REVERB_API_AVAILABLE = False
+    logger.warning(f"Reverb API not available: {e}")
+
 # Temporarily comment out scrapers for deployment
 # from scrapers import (
 #     scrape_reverb, 
@@ -759,52 +768,91 @@ async def get_guitars_by_model(brand: str, model: str, ebay_api_key: Optional[st
     logger.info(f"Getting guitars for {brand} {model}")
     
     try:
-        # Try to use the new dynamic deals system first
-        if DYNAMIC_DEALS_AVAILABLE:
-            logger.info(f"Using dynamic deals generator for {brand} {model}")
-            
-            # Generate enhanced guitar specifications with image
-            guitar_specs = get_guitar_specs_sync(brand, model)
-            
-            # Get guitar image URL
+        # Try to use real Reverb data first if available
+        reverb_listings = []
+        if REVERB_API_AVAILABLE:
             try:
-                from guitar_specs_api import GuitarSpecsAPI
-                specs_api = GuitarSpecsAPI()
-                guitar_image = await specs_api.get_guitar_image(brand, model, guitar_specs.get("type", "Electric"))
+                logger.info(f"Searching Reverb for real listings: {brand} {model}")
+                reverb_listings = await search_reverb_guitars(brand, model, max_results=15)
+                logger.info(f"Found {len(reverb_listings)} Reverb listings")
             except Exception as e:
-                logger.warning(f"Could not fetch guitar image: {e}")
-                guitar_image = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400"  # Fallback
+                logger.warning(f"Reverb search failed: {e}")
+        
+        # Get guitar specifications and image
+        guitar_specs = get_guitar_specs_sync(brand, model) if DYNAMIC_DEALS_AVAILABLE else {}
+        
+        # Get guitar image URL
+        guitar_image = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400"  # Fallback
+        try:
+            from guitar_specs_api import GuitarSpecsAPI
+            specs_api = GuitarSpecsAPI()
+            guitar_image = await specs_api.get_guitar_image(brand, model, guitar_specs.get("type", "Electric"))
+        except Exception as e:
+            logger.warning(f"Could not fetch guitar image: {e}")
+        
+        # Determine primary data source and listings
+        if reverb_listings:
+            # Use real Reverb data as primary source
+            all_listings = reverb_listings
+            data_sources = ["Reverb (Real Data)"]
+            api_status = f"Real marketplace data from Reverb - {len(reverb_listings)} listings"
             
-            # Generate dynamic deals
-            dynamic_listings = generate_guitar_deals(brand, model, count=15)
+            # Add simulated data to supplement if needed
+            if DYNAMIC_DEALS_AVAILABLE and len(reverb_listings) < 10:
+                try:
+                    simulated_listings = generate_guitar_deals(brand, model, count=10 - len(reverb_listings))
+                    # Mark simulated listings
+                    for listing in simulated_listings:
+                        listing["source"] = "Simulated"
+                    all_listings.extend(simulated_listings)
+                    data_sources.append("Simulated")
+                except Exception as e:
+                    logger.warning(f"Could not generate supplemental listings: {e}")
+        
+        elif DYNAMIC_DEALS_AVAILABLE:
+            # Fall back to dynamic generation
+            logger.info(f"Using dynamic deals generator for {brand} {model}")
+            all_listings = generate_guitar_deals(brand, model, count=15)
+            data_sources = ["Dynamic Generation"]
+            api_status = "Dynamic deal generation - simulated marketplace data"
+        
+        else:
+            # Final fallback to empty results
+            all_listings = []
+            data_sources = []
+            api_status = "No data sources available"
+        
+        # Calculate statistics
+        if all_listings:
+            prices = [listing["price"] for listing in all_listings]
+            market_price = guitar_specs.get("msrp", sum(prices) / len(prices)) * 0.75 if guitar_specs else sum(prices) / len(prices)
+            price_range = {"min": min(prices), "max": max(prices)}
             
-            # Get summary statistics
-            deal_stats = get_deal_summary_stats(dynamic_listings)
-            
-            # Calculate market price from guitar specs
-            market_price = guitar_specs.get("msrp", 1200) * 0.75  # Typical used market price
-            
-            # Calculate price range
-            prices = [listing["price"] for listing in dynamic_listings]
-            price_range = {"min": min(prices), "max": max(prices)} if prices else {"min": 0, "max": 0}
-            
-            return {
-                "brand": brand,
-                "model": model,
-                "market_price": market_price,
-                "price_range": price_range,
-                "listings": dynamic_listings,
-                "listing_count": len(dynamic_listings),
-                "deal_categories": {},  # Will be enhanced later
-                "model_variants": [{"name": model, "msrp": guitar_specs.get("msrp", 1200)}],
-                "data_sources": ["Dynamic Generation"],
-                "scraping_status": "success",
-                "api_status": "Dynamic deal generation successful",
-                "message": f"Generated {len(dynamic_listings)} realistic deals for {brand} {model}",
-                "guitar_specs": guitar_specs,
-                "guitar_image": guitar_image,
-                "deal_statistics": deal_stats
-            }
+            # Get deal statistics
+            deal_stats = get_deal_summary_stats(all_listings) if DYNAMIC_DEALS_AVAILABLE else {}
+        else:
+            market_price = guitar_specs.get("msrp", 1200) * 0.75 if guitar_specs else 1200
+            price_range = {"min": 0, "max": 0}
+            deal_stats = {}
+        
+        return {
+            "brand": brand,
+            "model": model,
+            "market_price": market_price,
+            "price_range": price_range,
+            "listings": all_listings,
+            "listing_count": len(all_listings),
+            "deal_categories": {},  # Will be enhanced later
+            "model_variants": [{"name": model, "msrp": guitar_specs.get("msrp", 1200) if guitar_specs else 1200}],
+            "data_sources": data_sources,
+            "scraping_status": "success",
+            "api_status": api_status,
+            "message": f"Found {len(all_listings)} listings for {brand} {model} from {', '.join(data_sources)}",
+            "guitar_specs": guitar_specs,
+            "guitar_image": guitar_image,
+            "deal_statistics": deal_stats,
+            "has_real_data": len(reverb_listings) > 0
+        }
         
         # Fallback to original system if dynamic system unavailable
         logger.info(f"Falling back to original system for {brand} {model}")
