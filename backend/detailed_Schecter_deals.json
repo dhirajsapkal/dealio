@@ -1,0 +1,366 @@
+{
+  "guitar_specs": {
+    "brand": "detailed",
+    "model": "Schecter",
+    "type": "Electric",
+    "msrp": 1200,
+    "body": "Basswood",
+    "neck": "Maple",
+    "fretboard": "Maple",
+    "pickups": "P90",
+    "hardware": "Die-cast Tuners, Fixed Bridge",
+    "finish": "Gold",
+    "scale_length": "25.5\"",
+    "frets": 22,
+    "features": [
+      "Modern C Neck",
+      "Locking Tuners",
+      "Bone Nut"
+    ],
+    "description": "The detailed Schecter combines traditional craftsmanship with modern innovations for an unparalleled playing experience.",
+    "tier": "Entry",
+    "year_introduced": 2011,
+    "country_of_origin": "Various",
+    "weight_lbs": 8.4,
+    "imageUrl": "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400"
+  },
+  "deals": [
+    {
+      "id": "deal-0-3459",
+      "price": 771,
+      "marketplace": "eBay",
+      "sellerLocation": "Miami, FL",
+      "datePosted": "2025-06-19",
+      "listingUrl": "https://ebay.com/itm/734498000833",
+      "condition": "Very Good",
+      "dealScore": 70,
+      "sellerVerified": true,
+      "description": "Excellent detailed Schecter in very good shape. Perfect for gigging or studio work.",
+      "sellerInfo": {
+        "name": "Jessica S.",
+        "rating": 4.3,
+        "accountAge": "7 years",
+        "responseTime": "16 hours",
+        "salesCount": 30
+      },
+      "shipping": {
+        "cost": 30,
+        "time": "3-7 business days",
+        "note": "See item details"
+      },
+      "images": 4,
+      "watchers": 17,
+      "timeLeft": "7d 10h 38m"
+    },
+    {
+      "id": "deal-3-1609",
+      "price": 680,
+      "marketplace": "Reverb",
+      "sellerLocation": "Boston, MA",
+      "datePosted": "2025-06-19",
+      "listingUrl": "https://reverb.com/item/90691375",
+      "condition": "Good",
+      "dealScore": 68,
+      "sellerVerified": true,
+      "description": "Selling my detailed Schecter. Good condition with normal wear. Sounds amazing. Some visible wear but all original and functional.",
+      "sellerInfo": {
+        "name": "Sarah J.",
+        "rating": 4.2,
+        "accountAge": "1 years",
+        "responseTime": "8 hours",
+        "salesCount": 22
+      },
+      "shipping": {
+        "cost": 25,
+        "time": "3-5 business days",
+        "note": "Calculated at checkout"
+      },
+      "images": 6,
+      "watchers": 0,
+      "timeLeft": null
+    },
+    {
+      "id": "deal-5-8153",
+      "price": 552,
+      "marketplace": "Reverb",
+      "sellerLocation": "Austin, TX",
+      "datePosted": "2025-07-08",
+      "listingUrl": "https://reverb.com/item/18841259",
+      "condition": "Fair",
+      "dealScore": 66,
+      "sellerVerified": true,
+      "description": "Selling my detailed Schecter. Fair condition with normal wear. Sounds amazing. Shows wear but still plays well. Good project guitar.",
+      "sellerInfo": {
+        "name": "Ryan D.",
+        "rating": 4.9,
+        "accountAge": "6 years",
+        "responseTime": "15 hours",
+        "salesCount": 45
+      },
+      "shipping": {
+        "cost": 25,
+        "time": "3-5 business days",
+        "note": "Calculated at checkout"
+      },
+      "images": 3,
+      "watchers": 0,
+      "timeLeft": null
+    },
+    {
+      "id": "deal-7-2710",
+      "price": 800,
+      "marketplace": "eBay",
+      "sellerLocation": "Charlotte, NC",
+      "datePosted": "2025-07-05",
+      "listingUrl": "https://ebay.com/itm/748292383828",
+      "condition": "Very Good",
+      "dealScore": 65,
+      "sellerVerified": true,
+      "description": "Amazing detailed Schecter! Very Good condition. Hate to see it go but need the space.",
+      "sellerInfo": {
+        "name": "Sarah D.",
+        "rating": 4.8,
+        "accountAge": "5 years",
+        "responseTime": "2 hours",
+        "salesCount": 50
+      },
+      "shipping": {
+        "cost": 20,
+        "time": "3-7 business days",
+        "note": "See item details"
+      },
+      "images": 3,
+      "watchers": 6,
+      "timeLeft": null
+    },
+    {
+      "id": "deal-10-2258",
+      "price": 873,
+      "marketplace": "Facebook Marketplace",
+      "sellerLocation": "Nashville, TN",
+      "datePosted": "2025-06-26",
+      "listingUrl": "https://facebook.com/marketplace/item/439569917873925",
+      "condition": "Excellent",
+      "dealScore": 64,
+      "sellerVerified": false,
+      "description": "Selling my detailed Schecter. Excellent condition with normal wear. Sounds amazing. Very clean with minor signs of use.",
+      "sellerInfo": {
+        "name": "Chris M.",
+        "rating": 4.5,
+        "accountAge": "8 years",
+        "responseTime": "5 hours",
+        "salesCount": 17
+      },
+      "shipping": {
+        "cost": 0,
+        "time": "Local pickup",
+        "note": "Cash only"
+      },
+      "images": 4,
+      "watchers": 0,
+      "timeLeft": null
+    },
+    {
+      "id": "deal-2-5946",
+      "price": 813,
+      "marketplace": "Facebook Marketplace",
+      "sellerLocation": "Los Angeles, CA",
+      "datePosted": "2025-06-22",
+      "listingUrl": "https://facebook.com/marketplace/item/251429864244449",
+      "condition": "Very Good",
+      "dealScore": 63,
+      "sellerVerified": true,
+      "description": "Great detailed Schecter looking for a new home. Very Good condition, no major issues.",
+      "sellerInfo": {
+        "name": "Amanda S.",
+        "rating": 4.5,
+        "accountAge": "3 years",
+        "responseTime": "8 hours",
+        "salesCount": 14
+      },
+      "shipping": {
+        "cost": 0,
+        "time": "Local pickup",
+        "note": "Cash only"
+      },
+      "images": 6,
+      "watchers": 0,
+      "timeLeft": null
+    },
+    {
+      "id": "deal-9-3746",
+      "price": 933,
+      "marketplace": "Reverb",
+      "sellerLocation": "Nashville, TN",
+      "datePosted": "2025-06-18",
+      "listingUrl": "https://reverb.com/item/38496432",
+      "condition": "Excellent",
+      "dealScore": 63,
+      "sellerVerified": true,
+      "description": "Selling my detailed Schecter. Excellent condition with normal wear. Sounds amazing. Very clean with minor signs of use.",
+      "sellerInfo": {
+        "name": "Mike S.",
+        "rating": 4.8,
+        "accountAge": "1 years",
+        "responseTime": "4 hours",
+        "salesCount": 21
+      },
+      "shipping": {
+        "cost": 45,
+        "time": "3-5 business days",
+        "note": "Calculated at checkout"
+      },
+      "images": 3,
+      "watchers": 0,
+      "timeLeft": null
+    },
+    {
+      "id": "deal-6-7271",
+      "price": 877,
+      "marketplace": "Facebook Marketplace",
+      "sellerLocation": "Austin, TX",
+      "datePosted": "2025-06-20",
+      "listingUrl": "https://facebook.com/marketplace/item/660367835481657",
+      "condition": "Excellent",
+      "dealScore": 62,
+      "sellerVerified": false,
+      "description": "Well-cared-for detailed Schecter. Excellent condition. Great tone and feel. Very clean with minor signs of use.",
+      "sellerInfo": {
+        "name": "Ryan W.",
+        "rating": 4.8,
+        "accountAge": "6 years",
+        "responseTime": "1 hours",
+        "salesCount": 30
+      },
+      "shipping": {
+        "cost": 0,
+        "time": "Local pickup",
+        "note": "Cash only"
+      },
+      "images": 3,
+      "watchers": 0,
+      "timeLeft": null
+    },
+    {
+      "id": "deal-8-2332",
+      "price": 790,
+      "marketplace": "eBay",
+      "sellerLocation": "Kansas City, MO",
+      "datePosted": "2025-07-07",
+      "listingUrl": "https://ebay.com/itm/324189238640",
+      "condition": "Very Good",
+      "dealScore": 57,
+      "sellerVerified": false,
+      "description": "Selling my detailed Schecter. Very Good condition with normal wear. Sounds amazing.",
+      "sellerInfo": {
+        "name": "Jessica S.",
+        "rating": 4.5,
+        "accountAge": "4 years",
+        "responseTime": "13 hours",
+        "salesCount": 30
+      },
+      "shipping": {
+        "cost": 20,
+        "time": "3-7 business days",
+        "note": "See item details"
+      },
+      "images": 3,
+      "watchers": 17,
+      "timeLeft": "3d 10h 2m"
+    },
+    {
+      "id": "deal-1-9936",
+      "price": 774,
+      "marketplace": "eBay",
+      "sellerLocation": "Charlotte, NC",
+      "datePosted": "2025-06-27",
+      "listingUrl": "https://ebay.com/itm/966485280645",
+      "condition": "Good",
+      "dealScore": 54,
+      "sellerVerified": true,
+      "description": "Amazing detailed Schecter! Good condition. Hate to see it go but need the space. Some visible wear but all original and functional.",
+      "sellerInfo": {
+        "name": "Amanda S.",
+        "rating": 4.7,
+        "accountAge": "1 years",
+        "responseTime": "21 hours",
+        "salesCount": 17
+      },
+      "shipping": {
+        "cost": 20,
+        "time": "3-7 business days",
+        "note": "See item details"
+      },
+      "images": 3,
+      "watchers": 6,
+      "timeLeft": null
+    },
+    {
+      "id": "deal-11-5603",
+      "price": 1135,
+      "marketplace": "eBay",
+      "sellerLocation": "Minneapolis, MN",
+      "datePosted": "2025-07-02",
+      "listingUrl": "https://ebay.com/itm/491219269346",
+      "condition": "Excellent",
+      "dealScore": 46,
+      "sellerVerified": false,
+      "description": "Selling my detailed Schecter. Excellent condition with normal wear. Sounds amazing. Very clean with minor signs of use.",
+      "sellerInfo": {
+        "name": "Amanda M.",
+        "rating": 4.6,
+        "accountAge": "3 years",
+        "responseTime": "6 hours",
+        "salesCount": 30
+      },
+      "shipping": {
+        "cost": 0,
+        "time": "3-7 business days",
+        "note": "See item details"
+      },
+      "images": 6,
+      "watchers": 18,
+      "timeLeft": "1d 20h 10m"
+    },
+    {
+      "id": "deal-4-4610",
+      "price": 1003,
+      "marketplace": "eBay",
+      "sellerLocation": "Kansas City, MO",
+      "datePosted": "2025-06-24",
+      "listingUrl": "https://ebay.com/itm/106939415496",
+      "condition": "Very Good",
+      "dealScore": 30,
+      "sellerVerified": false,
+      "description": "Selling my detailed Schecter. Very Good condition with normal wear. Sounds amazing.",
+      "sellerInfo": {
+        "name": "Amanda W.",
+        "rating": 4.8,
+        "accountAge": "2 years",
+        "responseTime": "21 hours",
+        "salesCount": 11
+      },
+      "shipping": {
+        "cost": 20,
+        "time": "3-7 business days",
+        "note": "See item details"
+      },
+      "images": 7,
+      "watchers": 17,
+      "timeLeft": null
+    }
+  ],
+  "summary": {
+    "total_listings": 12,
+    "price_range": {
+      "min": 552,
+      "max": 1135,
+      "avg": 833
+    },
+    "score_range": {
+      "min": 30,
+      "max": 70,
+      "avg": 59
+    }
+  }
+}

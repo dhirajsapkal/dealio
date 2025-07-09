@@ -25,6 +25,15 @@ from guitar_database import (
     GUITAR_DATABASE
 )
 
+# Import the new dynamic systems
+try:
+    from dynamic_deals_generator import generate_guitar_deals, get_deal_summary_stats
+    from guitar_specs_api import get_guitar_specs_sync
+    DYNAMIC_DEALS_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"Dynamic deals system not available: {e}")
+    DYNAMIC_DEALS_AVAILABLE = False
+
 # Temporarily comment out scrapers for deployment
 # from scrapers import (
 #     scrape_reverb, 
@@ -745,74 +754,121 @@ async def get_best_deals(min_score: int = 70):
 
 @app.get("/guitars/{brand}/{model}")
 async def get_guitars_by_model(brand: str, model: str, ebay_api_key: Optional[str] = None):
-    """Get guitar listings for a specific brand and model with enhanced deal analysis and real API data."""
+    """Get guitar listings for a specific brand and model with dynamic deal generation."""
     
-    # Get eBay API key from environment if not provided in query
-    if not ebay_api_key:
-        ebay_api_key = os.getenv("EBAY_API_KEY")
+    logger.info(f"Getting guitars for {brand} {model}")
     
-    # Aggregate listings from all sources using real scrapers
     try:
-        all_listings = await aggregate_all_listings(brand, model, ebay_api_key)
-        scraping_status = "success"
-        scraping_message = f"Successfully scraped listings for {brand} {model}"
-    except Exception as e:
-        logger.error(f"Error aggregating listings: {e}")
-        all_listings = []
-        scraping_status = "failed"
-        scraping_message = f"Scraping failed: {str(e)}. This is expected as many sites block scraping. We're working on API integrations."
-    
-    if not all_listings:
-        # Return empty structure instead of 404 to show "no deals found" state
+        # Try to use the new dynamic deals system first
+        if DYNAMIC_DEALS_AVAILABLE:
+            logger.info(f"Using dynamic deals generator for {brand} {model}")
+            
+            # Generate enhanced guitar specifications
+            guitar_specs = get_guitar_specs_sync(brand, model)
+            
+            # Generate dynamic deals
+            dynamic_listings = generate_guitar_deals(brand, model, count=15)
+            
+            # Get summary statistics
+            deal_stats = get_deal_summary_stats(dynamic_listings)
+            
+            # Calculate market price from guitar specs
+            market_price = guitar_specs.get("msrp", 1200) * 0.75  # Typical used market price
+            
+            # Calculate price range
+            prices = [listing["price"] for listing in dynamic_listings]
+            price_range = {"min": min(prices), "max": max(prices)} if prices else {"min": 0, "max": 0}
+            
+            return {
+                "brand": brand,
+                "model": model,
+                "market_price": market_price,
+                "price_range": price_range,
+                "listings": dynamic_listings,
+                "listing_count": len(dynamic_listings),
+                "deal_categories": {},  # Will be enhanced later
+                "model_variants": [{"name": model, "msrp": guitar_specs.get("msrp", 1200)}],
+                "data_sources": ["Dynamic Generation"],
+                "scraping_status": "success",
+                "api_status": "Dynamic deal generation successful",
+                "message": f"Generated {len(dynamic_listings)} realistic deals for {brand} {model}",
+                "guitar_specs": guitar_specs,
+                "deal_statistics": deal_stats
+            }
+        
+        # Fallback to original system if dynamic system unavailable
+        logger.info(f"Falling back to original system for {brand} {model}")
+        
+        # Get eBay API key from environment if not provided in query
+        if not ebay_api_key:
+            ebay_api_key = os.getenv("EBAY_API_KEY")
+        
+        # Aggregate listings from all sources using real scrapers
+        try:
+            all_listings = await aggregate_all_listings(brand, model, ebay_api_key)
+            scraping_status = "success"
+            scraping_message = f"Successfully scraped listings for {brand} {model}"
+        except Exception as e:
+            logger.error(f"Error aggregating listings: {e}")
+            all_listings = []
+            scraping_status = "failed"
+            scraping_message = f"Scraping failed: {str(e)}. This is expected as many sites block scraping. We're working on API integrations."
+        
+        if not all_listings:
+            # Return empty structure instead of 404 to show "no deals found" state
+            return {
+                "brand": brand,
+                "model": model,
+                "market_price": get_estimated_market_price(brand, model),
+                "price_range": {"min": 0, "max": 0},
+                "listings": [],
+                "listing_count": 0,
+                "deal_categories": {},
+                "model_variants": get_model_variants(brand, model),
+                "data_sources": [],
+                "scraping_status": scraping_status,
+                "api_status": scraping_message,
+                "message": f"No listings found for {brand} {model}. This is normal as most marketplaces block automated scraping. Try checking the sites manually or wait for our API integrations."
+            }
+        
+        # Calculate market statistics
+        prices = [listing["price"] for listing in all_listings if listing.get("price")]
+        if prices:
+            market_price = sum(prices) / len(prices)
+            lowest_price = min(prices)
+            highest_price = max(prices)
+        else:
+            market_price = 600.0
+            lowest_price = 0
+            highest_price = 0
+        
+        # Enhanced deal categorization
+        deal_categories = categorize_deals(all_listings, brand, model)
+        
+        # Determine data sources used
+        data_sources = list(set([listing.get("source", "demo") for listing in all_listings]))
+        
         return {
             "brand": brand,
             "model": model,
-            "market_price": get_estimated_market_price(brand, model),
-            "price_range": {"min": 0, "max": 0},
-            "listings": [],
-            "listing_count": 0,
-            "deal_categories": {},
+            "market_price": market_price,
+            "price_range": {
+                "min": lowest_price,
+                "max": highest_price
+            },
+            "listings": all_listings,
+            "listing_count": len(all_listings),
+            "deal_categories": deal_categories,
             "model_variants": get_model_variants(brand, model),
-            "data_sources": [],
+            "data_sources": data_sources,
             "scraping_status": scraping_status,
-            "api_status": scraping_message,
-            "message": f"No listings found for {brand} {model}. This is normal as most marketplaces block automated scraping. Try checking the sites manually or wait for our API integrations."
+            "api_status": f"Fetched from {len(data_sources)} sources: {', '.join(data_sources)}",
+            "message": scraping_message
         }
-    
-    # Calculate market statistics
-    prices = [listing["price"] for listing in all_listings if listing.get("price")]
-    if prices:
-        market_price = sum(prices) / len(prices)
-        lowest_price = min(prices)
-        highest_price = max(prices)
-    else:
-        market_price = 600.0
-        lowest_price = 0
-        highest_price = 0
-    
-    # Enhanced deal categorization
-    deal_categories = categorize_deals(all_listings, brand, model)
-    
-    # Determine data sources used
-    data_sources = list(set([listing.get("source", "demo") for listing in all_listings]))
-    
-    return {
-        "brand": brand,
-        "model": model,
-        "market_price": market_price,
-        "price_range": {
-            "min": lowest_price,
-            "max": highest_price
-        },
-        "listings": all_listings,
-        "listing_count": len(all_listings),
-        "deal_categories": deal_categories,
-        "model_variants": get_model_variants(brand, model),
-        "data_sources": data_sources,
-        "scraping_status": scraping_status,
-        "api_status": f"Fetched from {len(data_sources)} sources: {', '.join(data_sources)}",
-        "message": scraping_message
-    }
+        
+    except Exception as e:
+        logger.error(f"Error getting guitars for {brand} {model}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get guitar data: {str(e)}")
 
 def categorize_deals(listings, brand, model):
     """Categorize deals by different criteria for smarter recommendations."""
