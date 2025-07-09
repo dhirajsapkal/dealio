@@ -352,7 +352,9 @@ export default function Dashboard() {
                 {/* Brand */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Brand</label>
+                  <p className="text-xs text-blue-600">Debug: {brandOptions.length} brands loaded, Schecter found: {brandOptions.some(b => b.label === 'Schecter') ? 'YES' : 'NO'}</p>
                   <Combobox
+                    key={`brand-${brandOptions.length}`}
                     options={brandOptions}
                     value={formData.brand}
                     onValueChange={(value) => setFormData({...formData, brand: value, model: ''})}
