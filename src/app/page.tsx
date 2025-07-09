@@ -96,13 +96,13 @@ export default function Dashboard() {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        console.log('🎸 Loaded brands from API:', data.brands);
-        console.log('🎸 Looking for Schecter:', data.brands.filter((b: string) => b.toLowerCase().includes('sch')));
-        const options = data.brands.map((brand: string) => ({
+        // The API returns a direct array of strings, not an object with a .brands key.
+        console.log('🎸 Loaded brands from API:', data);
+        const options = data.map((brand: string) => ({
           value: brand,
           label: brand
         }));
-        console.log('🎸 Brand options set:', options.filter((opt: any) => opt.label.toLowerCase().includes('sch')));
+        console.log('🎸 Brand options set:', options);
         setBrandOptions(options);
       } catch (error) {
         console.error('Error loading brands from API:', error);
