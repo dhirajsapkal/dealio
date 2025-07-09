@@ -12,6 +12,16 @@ import { Combobox } from '@/components/ui/combobox';
 import { Badge } from '@/components/ui/badge';
 import { Search, Guitar, Plus, TrendingUp, Clock, DollarSign, X, Trash2 } from 'lucide-react';
 
+// Helper function to get the correct API URL
+const getApiUrl = () => {
+  // In production, always use the Render backend
+  if (process.env.NODE_ENV === 'production') {
+    return 'https://dealio-backend.onrender.com';
+  }
+  // In development, use environment variable or localhost
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+};
+
 interface TrackedGuitar {
   id: string;
   type: 'Electric' | 'Acoustic' | 'Bass';
@@ -85,7 +95,7 @@ export default function Dashboard() {
   useEffect(() => {
     const loadBrands = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/guitars/brands`);
+        const response = await fetch(`${getApiUrl()}/guitars/brands`);
         const data = await response.json();
         const options = data.brands.map((brand: string) => ({
           value: brand,
@@ -120,7 +130,7 @@ export default function Dashboard() {
           ...(formData.type && { guitar_type: formData.type })
         });
         
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/guitars/models?${params}`);
+        const response = await fetch(`${getApiUrl()}/guitars/models?${params}`);
         const data = await response.json();
         
         let models = data.models || [];
@@ -151,7 +161,7 @@ export default function Dashboard() {
   useEffect(() => {
     const testApiConnection = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/health`);
+        const response = await fetch(`${getApiUrl()}/health`);
         const data = await response.json();
         setApiStatus(data.status === 'ok' ? 'Connected' : 'Error');
       } catch (error) {
@@ -183,7 +193,7 @@ export default function Dashboard() {
 
   const fetchGuitarMarketData = async (brand: string, model: string) => {
     try {
-              const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/guitars/${encodeURIComponent(brand)}/${encodeURIComponent(model)}`);
+              const response = await fetch(`${getApiUrl()}/guitars/${encodeURIComponent(brand)}/${encodeURIComponent(model)}`);
       if (response.ok) {
         const data = await response.json();
         return {

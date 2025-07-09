@@ -53,6 +53,16 @@ interface ScrapingStatus {
   nextScan: string;
 }
 
+// Helper function to get the correct API URL
+const getApiUrl = () => {
+  // In production, always use the Render backend
+  if (process.env.NODE_ENV === 'production') {
+    return 'https://dealio-backend.onrender.com';
+  }
+  // In development, use environment variable or localhost
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+};
+
 /**
  * Guitar Detail Page Component
  * Comprehensive view of a single tracked guitar with deal analysis and marketplace listings
@@ -208,7 +218,7 @@ function GuitarDetailPageContent() {
       setScrapingStatus(prev => ({ ...prev, isActive: true, progress: 0, currentSource: 'Initializing...' }));
       
       // Start API call immediately
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/guitars/${encodeURIComponent(brand)}/${encodeURIComponent(model)}`);
+        const response = await fetch(`${getApiUrl()}/guitars/${encodeURIComponent(brand)}/${encodeURIComponent(model)}`);
       
       if (response.ok) {
         const data = await response.json();
