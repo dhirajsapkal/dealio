@@ -12,13 +12,39 @@ import { Combobox } from '@/components/ui/combobox';
 import { Badge } from '@/components/ui/badge';
 import { Search, Guitar, Plus, TrendingUp, Clock, DollarSign, X, Trash2 } from 'lucide-react';
 
-// Helper function to get the correct API URL
+// Helper function to get the correct API URL with intelligent environment detection
 const getApiUrl = () => {
-  // Use environment variable for production/preview, with a fallback for local development.
-  // Updated to use correct Render backend URL
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-  console.log('🔍 API URL being used:', apiUrl);
-  console.log('🔍 Environment variable NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
+  const envApiUrl = process.env.NEXT_PUBLIC_API_URL;
+  const isProduction = process.env.NODE_ENV === 'production';
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  
+  // Default URLs based on environment
+  const defaultLocal = 'http://localhost:8000';
+  const defaultProduction = 'https://dealio-backend.onrender.com';
+  
+  // Determine final API URL
+  let apiUrl: string;
+  
+  if (envApiUrl) {
+    // Use explicit environment variable if set
+    apiUrl = envApiUrl;
+  } else if (isDevelopment) {
+    // Default to local in development
+    apiUrl = defaultLocal;
+  } else {
+    // Default to production in production
+    apiUrl = defaultProduction;
+  }
+  
+  // Enhanced logging for development
+  if (isDevelopment) {
+    console.log('🔍 Environment Detection:');
+    console.log('  - NODE_ENV:', process.env.NODE_ENV);
+    console.log('  - NEXT_PUBLIC_API_URL:', envApiUrl || '(not set)');
+    console.log('  - Final API URL:', apiUrl);
+    console.log('  - Is Local Backend:', apiUrl.includes('localhost'));
+  }
+  
   return apiUrl;
 };
 
@@ -191,18 +217,19 @@ export default function Dashboard() {
     }
     
     const data = await response.json();
+    console.log('🎸 API Response for guitar data:', data);
     
-    // Require complete data from API
-    if (!data.market_price || !data.guitar_image || !data.guitar_specs) {
-      throw new Error('API must provide complete guitar data including image and specs');
+    // Check for the correct API response structure
+    if (!data.guitarData || !data.marketData) {
+      throw new Error('API response missing required guitar or market data');
     }
     
-        return {
-          marketPrice: data.market_price,
-      dealsCount: data.listing_count || data.count,
-      bestDealPrice: data.listings?.[0]?.price,
-      imageUrl: data.guitar_image,
-      specs: data.guitar_specs
+    return {
+      marketPrice: data.marketData.averagePrice || 0,
+      dealsCount: data.marketData.listingCount || 0,
+      bestDealPrice: data.deals?.all?.[0]?.price || null,
+      imageUrl: data.guitarData.imageUrl || null,
+      specs: data.guitarData.specs || null
     };
   };
 
