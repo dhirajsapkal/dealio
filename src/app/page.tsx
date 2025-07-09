@@ -133,23 +133,26 @@ export default function Dashboard() {
         });
         
         const response = await fetch(`${getApiUrl()}/guitars/models?${params}`);
-        const data = await response.json();
         
-        let models = data.models || [];
-        
-        // If we have models by type and a type is selected, use those
-        if (data.models_by_type && formData.type && data.models_by_type[formData.type]) {
-          models = data.models_by_type[formData.type];
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
+        
+        const data = await response.json();
+        console.log('🎸 Loaded models from API:', data);
+        
+        // The API returns a direct array of strings, just like brands
+        const models = Array.isArray(data) ? data : [];
         
         const options = models.map((model: string) => ({
           value: model,
           label: model
         }));
         
+        console.log('🎸 Model options set:', options);
         setModelOptions(options);
       } catch (error) {
-        console.error('Error loading models:', error);
+        console.error('🎸 Error loading models:', error);
         setModelOptions([]);
       } finally {
         setIsLoadingModels(false);
