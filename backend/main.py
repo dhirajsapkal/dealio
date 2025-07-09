@@ -34,6 +34,10 @@ except ImportError as e:
     logger.warning(f"Dynamic deals system not available: {e}")
     DYNAMIC_DEALS_AVAILABLE = False
 
+# Set up logging first
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 # Import Reverb API for real marketplace data
 try:
     from reverb_api import search_reverb_guitars
@@ -58,10 +62,6 @@ except ImportError as e:
 # Fallback scraper configuration for demo
 SCRAPERS = {}
 SCRAPER_PRIORITY = ["Reverb", "eBay", "Guitar Center", "Sweetwater", "Facebook", "Craigslist"]
-
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 # Initialize FastAPI app
 app = FastAPI(
