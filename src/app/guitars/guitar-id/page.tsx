@@ -55,12 +55,11 @@ interface ScrapingStatus {
 
 // Helper function to get the correct API URL
 const getApiUrl = () => {
-  // In production, always use the Render backend
-  if (process.env.NODE_ENV === 'production') {
-    return 'https://dealio-backend.onrender.com';
-  }
-  // In development, use environment variable or localhost
-  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+  // Always use the production backend for now since we have a working API
+  return 'https://dealio-backend.onrender.com';
+  
+  // Alternative: Use environment variable with production fallback
+  // return process.env.NEXT_PUBLIC_API_URL || 'https://dealio-backend.onrender.com';
 };
 
 /**
