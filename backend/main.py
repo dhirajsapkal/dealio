@@ -768,59 +768,63 @@ async def get_guitars_by_model(brand: str, model: str, ebay_api_key: Optional[st
     logger.info(f"Getting guitars for {brand} {model}")
     
     try:
-        # Try to use real Reverb data first if available
+        # TEMPORARY: Return simple test data to verify the API works
         reverb_listings = []
-        if REVERB_API_AVAILABLE:
-            try:
-                logger.info(f"Searching Reverb for real listings: {brand} {model}")
-                reverb_listings = await search_reverb_guitars(brand, model, max_results=15)
-                logger.info(f"Found {len(reverb_listings)} Reverb listings")
-            except Exception as e:
-                logger.warning(f"Reverb search failed: {e}")
-        
-        # Get guitar specifications and image
-        guitar_specs = get_guitar_specs_sync(brand, model) if DYNAMIC_DEALS_AVAILABLE else {}
+        guitar_specs = {
+            "brand": brand,
+            "model": model,
+            "type": "Electric",
+            "msrp": 2800,
+            "body": "Mahogany",
+            "neck": "Mahogany",
+            "fretboard": "Rosewood",
+            "pickups": "490R/498T Humbuckers"
+        }
         
         # Get guitar image URL
-        guitar_image = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400"  # Fallback
-        try:
-            from guitar_specs_api import GuitarSpecsAPI
-            specs_api = GuitarSpecsAPI()
-            guitar_image = await specs_api.get_guitar_image(brand, model, guitar_specs.get("type", "Electric"))
-        except Exception as e:
-            logger.warning(f"Could not fetch guitar image: {e}")
+        guitar_type = guitar_specs.get("type", "Electric") if guitar_specs else "Electric"
+        placeholders = {
+            "Electric": "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400",
+            "Acoustic": "https://images.unsplash.com/photo-1516924962500-2b4b3b99ea02?w=400",  
+            "Bass": "https://images.unsplash.com/photo-1550985068-687d5a0b590b?w=400"
+        }
+        guitar_image = placeholders.get(guitar_type, placeholders["Electric"])  # Default for now
         
-        # Determine primary data source and listings
-        if reverb_listings:
-            # Use real Reverb data as primary source
-            all_listings = reverb_listings
-            data_sources = ["Reverb (Real Data)"]
-            api_status = f"Real marketplace data from Reverb - {len(reverb_listings)} listings"
-            
-            # Add simulated data to supplement if needed
-            if DYNAMIC_DEALS_AVAILABLE and len(reverb_listings) < 10:
-                try:
-                    simulated_listings = generate_guitar_deals(brand, model, count=10 - len(reverb_listings))
-                    # Mark simulated listings
-                    for listing in simulated_listings:
-                        listing["source"] = "Simulated"
-                    all_listings.extend(simulated_listings)
-                    data_sources.append("Simulated")
-                except Exception as e:
-                    logger.warning(f"Could not generate supplemental listings: {e}")
+        # TODO: Re-enable Unsplash integration after fixing async event loop conflicts
+        # try:
+        #     from guitar_specs_api import GuitarSpecsAPI
+        #     specs_api = GuitarSpecsAPI()
+        #     guitar_image = await specs_api.get_guitar_image(brand, model, guitar_specs.get("type", "Electric"))
+        # except Exception as e:
+        #     logger.warning(f"Could not fetch guitar image: {e}")
         
-        elif DYNAMIC_DEALS_AVAILABLE:
-            # Fall back to dynamic generation
-            logger.info(f"Using dynamic deals generator for {brand} {model}")
-            all_listings = generate_guitar_deals(brand, model, count=15)
-            data_sources = ["Dynamic Generation"]
-            api_status = "Dynamic deal generation - simulated marketplace data"
-        
-        else:
-            # Final fallback to empty results
-            all_listings = []
-            data_sources = []
-            api_status = "No data sources available"
+        # Create simple test deals
+        all_listings = [
+            {
+                "listing_id": "test_1",
+                "title": f"{brand} {model} Electric Guitar",
+                "price": 2100,
+                "condition": "Excellent",
+                "source": "Test Data",
+                "url": "https://example.com/guitar1",
+                "seller_location": "Los Angeles, CA",
+                "deal_score": 75,
+                "specific_model": f"{brand} {model} Standard"
+            },
+            {
+                "listing_id": "test_2", 
+                "title": f"{brand} {model} Guitar - Great Condition",
+                "price": 1850,
+                "condition": "Very Good",
+                "source": "Test Data",
+                "url": "https://example.com/guitar2", 
+                "seller_location": "Nashville, TN",
+                "deal_score": 85,
+                "specific_model": f"{brand} {model} Studio"
+            }
+        ]
+        data_sources = ["Test Data"]
+        api_status = "Test mode - sample guitar listings"
         
         # Calculate statistics
         if all_listings:
@@ -828,8 +832,8 @@ async def get_guitars_by_model(brand: str, model: str, ebay_api_key: Optional[st
             market_price = guitar_specs.get("msrp", sum(prices) / len(prices)) * 0.75 if guitar_specs else sum(prices) / len(prices)
             price_range = {"min": min(prices), "max": max(prices)}
             
-            # Get deal statistics
-            deal_stats = get_deal_summary_stats(all_listings) if DYNAMIC_DEALS_AVAILABLE else {}
+            # Get deal statistics - temporarily disabled
+            deal_stats = {}
         else:
             market_price = guitar_specs.get("msrp", 1200) * 0.75 if guitar_specs else 1200
             price_range = {"min": 0, "max": 0}

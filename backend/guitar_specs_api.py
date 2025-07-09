@@ -412,12 +412,44 @@ async def get_enhanced_guitar_data(brand: str, model: str) -> Dict:
 
 
 def get_guitar_specs_sync(brand: str, model: str) -> Dict:
-    """Synchronous wrapper for getting guitar specs"""
+    """Synchronous wrapper for getting guitar specs - returns basic specs without async calls"""
     try:
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(get_enhanced_guitar_data(brand, model))
-    except RuntimeError:
-        # Create new loop if none exists
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        return loop.run_until_complete(get_enhanced_guitar_data(brand, model)) 
+        # Check if there's already an event loop running
+        try:
+            asyncio.get_running_loop()
+            # Event loop is running, return basic specs without async calls
+            print(f"Event loop running, returning basic specs for {brand} {model}")
+            return _get_basic_guitar_specs(brand, model)
+        except RuntimeError:
+            # No event loop running, safe to create one
+            return asyncio.run(get_enhanced_guitar_data(brand, model))
+    except Exception as e:
+        print(f"Error in sync guitar specs: {e}")
+        return _get_basic_guitar_specs(brand, model)
+
+def _get_basic_guitar_specs(brand: str, model: str) -> Dict:
+    """Get basic guitar specs without async calls"""
+    api = GuitarSpecsAPI()
+    guitar_type = api._infer_guitar_type(model)
+    msrp = api._estimate_msrp(brand, model)
+    
+    return {
+        "brand": brand,
+        "model": model,
+        "type": guitar_type,
+        "msrp": msrp,
+        "body": api._get_body_spec(brand, model),
+        "neck": api._get_neck_spec(brand, model),
+        "fretboard": api._get_fretboard_spec(brand, model),
+        "pickups": api._get_pickup_spec(brand, model),
+        "hardware": api._get_hardware_spec(brand),
+        "finish": api._get_finish_spec(brand, model),
+        "scale_length": api._get_scale_length(brand, model),
+        "frets": api._get_fret_count(brand, model),
+        "features": api._get_features(brand, model),
+        "weight_lbs": api._estimate_weight(brand, model),
+        "country_of_origin": api._get_country_of_origin(brand),
+        "year_introduced": api._estimate_year_introduced(brand, model),
+        "tier": api._determine_tier(brand, model),
+        "description": api._generate_description(brand, model)
+    } 

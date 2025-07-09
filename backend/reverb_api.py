@@ -337,11 +337,17 @@ async def search_reverb_guitars(brand: str, model: str, max_results: int = 20) -
 def search_reverb_guitars_sync(brand: str, model: str, max_results: int = 20) -> List[Dict]:
     """Synchronous wrapper for compatibility"""
     try:
-        loop = asyncio.get_event_loop()
-        return loop.run_until_complete(search_reverb_guitars(brand, model, max_results))
-    except RuntimeError:
-        # Event loop already running, return empty for now
-        logger.warning("Event loop already running, skipping Reverb search")
+        # Check if there's already an event loop running
+        try:
+            loop = asyncio.get_running_loop()
+            # Event loop is running, can't use run_until_complete
+            logger.warning("Event loop already running, skipping Reverb search for now")
+            return []
+        except RuntimeError:
+            # No event loop running, safe to create one
+            return asyncio.run(search_reverb_guitars(brand, model, max_results))
+    except Exception as e:
+        logger.error(f"Error in sync Reverb search: {e}")
         return []
 
 if __name__ == "__main__":
