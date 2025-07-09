@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ExternalLink, MapPin, Calendar, Star, AlertTriangle, CheckCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface AlternativeDealsListProps {
   deals: Array<{
@@ -111,123 +112,222 @@ export default function AlternativeDealsList({ deals }: AlternativeDealsListProp
 
   if (deals.length === 0) {
     return (
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-xl font-bold text-gray-900">Alternative Deals</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8">
-            <p className="text-gray-600">No alternative deals found at this time.</p>
-            <p className="text-sm text-gray-500 mt-2">We'll notify you when new listings become available.</p>
-          </div>
-        </CardContent>
-      </Card>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Card className="mb-6 hover:shadow-lg transition-all duration-300">
+          <CardHeader>
+            <CardTitle className="text-xl font-bold text-gray-900">Alternative Deals</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <motion.div 
+              className="text-center py-8"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+            >
+              <p className="text-gray-600">No alternative deals found at this time.</p>
+              <p className="text-sm text-gray-500 mt-2">We'll notify you when new listings become available.</p>
+            </motion.div>
+          </CardContent>
+        </Card>
+      </motion.div>
     );
   }
 
   return (
-    <Card className="mb-6">
-      <CardHeader>
-        <CardTitle className="text-xl font-bold text-gray-900">
-          Alternative Deals ({deals.length})
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {deals.map((deal) => (
-            <div key={deal.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200">
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-                {/* Marketplace & Score */}
-                <div className="md:col-span-2 flex items-center gap-3">
-                  {getMarketplaceIcon(deal.marketplace)}
-                  <div className="hidden md:block">
-                    <div className="font-medium text-sm text-gray-900">{deal.marketplace}</div>
-                    <div className="text-xs text-gray-500">{deal.condition}</div>
-                  </div>
-                </div>
-
-                {/* Price */}
-                <div className="md:col-span-2">
-                  <div className="text-2xl font-bold text-gray-900">
-                    ${deal.price.toLocaleString()}
-                  </div>
-                  <Badge className={`text-xs border ${getConditionColor(deal.condition)} md:hidden`}>
-                    {deal.condition}
-                  </Badge>
-                </div>
-
-                {/* Location & Date */}
-                <div className="md:col-span-3 space-y-1">
-                  <div className="flex items-center gap-1 text-sm text-gray-600">
-                    <MapPin className="w-3 h-3" />
-                    <span>{deal.sellerLocation}</span>
-                    {deal.sellerVerified && (
-                      <CheckCircle className="w-3 h-3 text-green-600 ml-1" />
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1 text-xs text-gray-500">
-                    <Calendar className="w-3 h-3" />
-                    <span>{deal.datePosted}</span>
-                  </div>
-                </div>
-
-                {/* Quick Notes */}
-                <div className="md:col-span-3">
-                  {deal.quickNotes && (
-                    <p className="text-sm text-gray-600 italic">"{deal.quickNotes}"</p>
-                  )}
-                </div>
-
-                {/* Score & Action */}
-                <div className="md:col-span-2 flex items-center justify-between md:justify-end gap-3">
-                  <div className="flex items-center gap-2">
-                    <MiniScoreVisualization score={deal.score} />
-                    <div className="hidden md:block">
-                      <div className={`text-xs font-medium ${getScoreColor(deal.score)}`}>
-                        Score {deal.score}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <Card className="mb-6 hover:shadow-lg transition-all duration-300">
+        <CardHeader>
+          <motion.div
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+          >
+            <CardTitle className="text-xl font-bold text-gray-900">
+              Alternative Deals ({deals.length})
+            </CardTitle>
+          </motion.div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <AnimatePresence>
+              {deals.map((deal, index) => (
+                <motion.div 
+                  key={deal.id} 
+                  className="border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-teal-200 transition-all duration-200 group"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ 
+                    duration: 0.4, 
+                    delay: index * 0.1,
+                    ease: [0.16, 1, 0.3, 1] 
+                  }}
+                  whileHover={{ 
+                    y: -2,
+                    transition: { duration: 0.2 }
+                  }}
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                    {/* Marketplace & Score */}
+                    <motion.div 
+                      className="md:col-span-2 flex items-center gap-3"
+                      whileHover={{ scale: 1.02 }}
+                      transition={{ duration: 0.1 }}
+                    >
+                      <motion.div
+                        whileHover={{ rotate: 5 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        {getMarketplaceIcon(deal.marketplace)}
+                      </motion.div>
+                      <div className="hidden md:block">
+                        <div className="font-medium text-sm text-gray-900">{deal.marketplace}</div>
+                        <div className="text-xs text-gray-500">{deal.condition}</div>
                       </div>
-                    </div>
+                    </motion.div>
+
+                    {/* Price */}
+                    <motion.div 
+                      className="md:col-span-2"
+                      whileHover={{ scale: 1.05 }}
+                      transition={{ duration: 0.1 }}
+                    >
+                      <div className="text-2xl font-bold text-gray-900">
+                        ${deal.price.toLocaleString()}
+                      </div>
+                      <Badge className={`text-xs border ${getConditionColor(deal.condition)} md:hidden`}>
+                        {deal.condition}
+                      </Badge>
+                    </motion.div>
+
+                    {/* Location & Date */}
+                    <motion.div 
+                      className="md:col-span-3 space-y-1"
+                      whileHover={{ scale: 1.02 }}
+                      transition={{ duration: 0.1 }}
+                    >
+                      <div className="flex items-center gap-1 text-sm text-gray-600">
+                        <MapPin className="w-3 h-3" />
+                        <span>{deal.sellerLocation}</span>
+                        {deal.sellerVerified && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.3, delay: 0.2 }}
+                          >
+                            <CheckCircle className="w-3 h-3 text-green-600 ml-1" />
+                          </motion.div>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 text-xs text-gray-500">
+                        <Calendar className="w-3 h-3" />
+                        <span>{deal.datePosted}</span>
+                      </div>
+                    </motion.div>
+
+                    {/* Quick Notes */}
+                    <motion.div 
+                      className="md:col-span-3"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.4, delay: 0.3 }}
+                    >
+                      {deal.quickNotes && (
+                        <p className="text-sm text-gray-600 italic">"{deal.quickNotes}"</p>
+                      )}
+                    </motion.div>
+
+                    {/* Score & Action */}
+                    <motion.div 
+                      className="md:col-span-2 flex items-center justify-between md:justify-end gap-3"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.4, delay: 0.2 }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <motion.div
+                          whileHover={{ scale: 1.1, rotate: 5 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <MiniScoreVisualization score={deal.score} />
+                        </motion.div>
+                        <div className="hidden md:block">
+                          <div className={`text-xs font-medium ${getScoreColor(deal.score)}`}>
+                            Score {deal.score}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <motion.div
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        transition={{ duration: 0.1 }}
+                      >
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => window.open(deal.listingUrl, '_blank')}
+                          className="flex-shrink-0 hover:bg-teal-50 hover:border-teal-300 group-hover:border-teal-400 transition-all duration-200"
+                        >
+                          <ExternalLink className="w-4 h-4 mr-1" />
+                          <span className="hidden sm:inline">View</span>
+                        </Button>
+                      </motion.div>
+                    </motion.div>
                   </div>
-                  
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => window.open(deal.listingUrl, '_blank')}
-                    className="flex-shrink-0"
+
+                  {/* Mobile Layout Additions */}
+                  <motion.div 
+                    className="md:hidden mt-3 pt-3 border-t border-gray-100"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    transition={{ duration: 0.3, delay: 0.4 }}
                   >
-                    <ExternalLink className="w-4 h-4 mr-1" />
-                    <span className="hidden sm:inline">View</span>
-                  </Button>
-                </div>
-              </div>
-
-              {/* Mobile Layout Additions */}
-              <div className="md:hidden mt-3 pt-3 border-t border-gray-100">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-700">Deal Score:</span>
-                    <Badge className={`text-xs ${getScoreColor(deal.score)}`}>
-                      {deal.score}/100
-                    </Badge>
-                  </div>
-                  {deal.sellerVerified && (
-                    <div className="flex items-center gap-1 text-xs text-green-600">
-                      <CheckCircle className="w-3 h-3" />
-                      <span>Verified Seller</span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-gray-700">Deal Score:</span>
+                        <Badge className={`text-xs ${getScoreColor(deal.score)}`}>
+                          {deal.score}/100
+                        </Badge>
+                      </div>
+                      {deal.sellerVerified && (
+                        <motion.div 
+                          className="flex items-center gap-1 text-xs text-green-600"
+                          initial={{ opacity: 0, scale: 0 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ duration: 0.3, delay: 0.5 }}
+                        >
+                          <CheckCircle className="w-3 h-3" />
+                          <span>Verified Seller</span>
+                        </motion.div>
+                      )}
                     </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+                  </motion.div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
 
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600">
-            Deals are updated every hour. <strong>Scores</strong> consider price, seller credibility, and listing quality.
-          </p>
-        </div>
-      </CardContent>
-    </Card>
+          <motion.div 
+            className="mt-6 text-center"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.6 }}
+          >
+            <p className="text-sm text-gray-600">
+              Deals are updated every hour. <strong>Scores</strong> consider price, seller credibility, and listing quality.
+            </p>
+          </motion.div>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 } 

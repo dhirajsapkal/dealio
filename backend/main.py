@@ -161,7 +161,7 @@ def standardize_listing(listing: Dict, source: str) -> Dict:
         "category": listing.get('category', 'N/A'),
         "description": cleaned_description,
         "listingUrl": listing.get('web_url', '#'),
-        "imageUrl": listing.get('photos', [{}])[0].get('_links', {}).get('large_crop', {}).get('href', '/placeholder.jpg'),
+        "imageUrl": listing.get('image_url', '/placeholder.jpg'),
         "source": source,
         "created_at": listing.get('created_at', datetime.now().isoformat()),
         "has_real_data": True # Flag indicating this is real marketplace data.
@@ -364,11 +364,26 @@ async def search_for_guitar_deals(brand: str, model: str):
 
     # Step 3: Fetch detailed guitar specs and an image.
     guitar_specs = None
+    real_guitar_image = None
+    
+    # Use real images from Reverb listings if available
+    if listings:
+        # Find the best quality image from the listings
+        for listing in listings:
+            if listing.get('imageUrl') and listing['imageUrl'] != '/placeholder.jpg':
+                real_guitar_image = listing['imageUrl']
+                logger.info(f"Using real guitar image from Reverb listing")
+                break
+    
     if GUITAR_SPECS_AVAILABLE:
         try:
             logger.info(f"Calling Guitar Specs API for '{brand} {model}'...")
             guitar_specs = get_guitar_specs_sync(brand, model)
             if guitar_specs:
+                # Override the random Unsplash image with real Reverb image if available
+                if real_guitar_image:
+                    guitar_specs['imageUrl'] = real_guitar_image
+                    logger.info("Using real Reverb image instead of generated image")
                 logger.info("Successfully fetched guitar specs.")
             else:
                 logger.warning("Guitar Specs API returned no data.")
@@ -387,7 +402,7 @@ async def search_for_guitar_deals(brand: str, model: str):
             "model": model,
             "info": model_info,
             "specs": guitar_specs, # Will be None if API failed
-            "imageUrl": guitar_specs.get("imageUrl") if guitar_specs else "/placeholder.jpg"
+            "imageUrl": guitar_specs.get("imageUrl") if guitar_specs else (real_guitar_image or "/placeholder.jpg")
         },
         "marketData": {
             "priceRange": {

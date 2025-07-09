@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -70,6 +71,7 @@ interface TrackedGuitar {
     fretboard?: string;
     pickups?: string;
     type?: string;
+    tier?: string;
   };
   createdAt: string;
 }
@@ -324,8 +326,8 @@ export default function Dashboard() {
           {/* CTA Card - Always First */}
           <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
             <DialogTrigger asChild>
-              <Card className="border-2 border-dashed border-teal-300 hover:border-teal-400 transition-colors duration-200 cursor-pointer bg-teal-50/50 hover:bg-teal-50">
-                <CardContent className="flex flex-col items-center justify-center h-full p-6 text-center min-h-[280px]">
+              <Card className="border-2 border-dashed border-teal-300 hover:border-teal-400 transition-colors duration-200 cursor-pointer bg-teal-50/50 hover:bg-teal-50 h-full">
+                <CardContent className="flex flex-col items-center justify-center h-full p-6 text-center min-h-[420px]">
                   <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mb-4">
                     <Plus className="w-8 h-8 text-teal-600" />
                   </div>
@@ -355,7 +357,7 @@ export default function Dashboard() {
                 </DialogDescription>
               </DialogHeader>
               
-              <div className="space-y-6 py-4">
+              <div className="space-y-6 py-4 min-h-[400px]">
                 {/* Step 1: Guitar Type */}
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
@@ -364,21 +366,27 @@ export default function Dashboard() {
                   </div>
                   <div className="grid grid-cols-3 gap-2 ml-8">
                     {['Electric', 'Acoustic', 'Bass'].map((type) => (
-                      <Button
+                      <motion.div
                         key={type}
-                        variant={formData.type === type ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setFormData({ ...formData, type })}
-                        className={formData.type === type ? 'bg-teal-600 hover:bg-teal-700' : 'hover:bg-teal-50 hover:border-teal-200'}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        transition={{ duration: 0.1 }}
                       >
-                        {type}
-                      </Button>
+                        <Button
+                          variant={formData.type === type ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setFormData({ ...formData, type })}
+                          className={`w-full h-8 ${formData.type === type ? 'bg-teal-600 hover:bg-teal-700' : 'hover:bg-teal-50 hover:border-teal-200'}`}
+                        >
+                          {type}
+                        </Button>
+                      </motion.div>
                     ))}
                   </div>
                 </div>
 
                 {/* Step 2: Brand */}
-                <div className="space-y-3">
+                <div className="space-y-3 min-h-[120px]">
                   <div className="flex items-center gap-2">
                     <div className={`w-6 h-6 rounded-full text-sm font-medium flex items-center justify-center ${
                       formData.type ? 'bg-teal-100 text-teal-600' : 'bg-gray-100 text-gray-400'
@@ -386,30 +394,34 @@ export default function Dashboard() {
                     <label className="text-sm font-medium">Which brand?</label>
                   </div>
                   <div className="ml-8">
-                    {brandOptions.length === 0 ? (
-                      <div className="p-3 bg-amber-50 border border-amber-200 rounded-md">
-                        <p className="text-sm text-amber-700">Loading brands from database...</p>
-                      </div>
-                    ) : (
-                  <Combobox
-                        key={`brand-${brandOptions.length}`}
-                    options={brandOptions}
-                    value={formData.brand}
-                    onValueChange={(value) => setFormData({...formData, brand: value, model: ''})}
-                        placeholder="Type to search brands (e.g., Fender, Gibson, Schecter)..."
-                        disabled={!formData.type}
-                  />
-                    )}
-                    {formData.type && brandOptions.length > 0 && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        {brandOptions.length} brands available • Type to search
-                      </p>
-                    )}
+                    <div className="min-h-[40px] flex items-center">
+                      {brandOptions.length === 0 ? (
+                        <div className="p-3 bg-amber-50 border border-amber-200 rounded-md w-full">
+                          <p className="text-sm text-amber-700">Loading brands from database...</p>
+                        </div>
+                      ) : (
+                        <Combobox
+                          key={`brand-${brandOptions.length}`}
+                          options={brandOptions}
+                          value={formData.brand}
+                          onValueChange={(value) => setFormData({...formData, brand: value, model: ''})}
+                          placeholder="Type to search brands (e.g., Fender, Gibson, Schecter)..."
+                          disabled={!formData.type}
+                        />
+                      )}
+                    </div>
+                    <div className="min-h-[20px] mt-1">
+                      {formData.type && brandOptions.length > 0 && (
+                        <p className="text-xs text-gray-500">
+                          {brandOptions.length} brands available • Type to search
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 {/* Step 3: Model */}
-                <div className="space-y-3">
+                <div className="space-y-3 min-h-[120px]">
                   <div className="flex items-center gap-2">
                     <div className={`w-6 h-6 rounded-full text-sm font-medium flex items-center justify-center ${
                       formData.brand ? 'bg-teal-100 text-teal-600' : 'bg-gray-100 text-gray-400'
@@ -417,138 +429,224 @@ export default function Dashboard() {
                     <label className="text-sm font-medium">What model?</label>
                   </div>
                   <div className="ml-8">
-                    {isLoadingModels ? (
-                      <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
-                        <p className="text-sm text-blue-700">Loading {formData.brand} models...</p>
-                      </div>
-                    ) : (
-                  <Combobox
-                    options={modelOptions}
-                    value={formData.model}
-                    onValueChange={(value) => setFormData({...formData, model: value})}
-                    placeholder={
-                      !formData.brand 
-                        ? "Select a brand first..." 
-                            : modelOptions.length > 0
-                              ? "Type to search models..."
-                              : "Type any model name..."
-                    }
-                    disabled={!formData.brand || isLoadingModels}
-                  />
-                    )}
-                    {formData.brand && !isLoadingModels && (
-                    <p className="text-xs text-gray-500 mt-1">
-                        {modelOptions.length > 0 
-                          ? `${modelOptions.length} models found • You can also type a custom model name`
-                          : "No predefined models found • Type any model name"
-                        }
-                    </p>
-                  )}
+                    <div className="min-h-[40px] flex items-center">
+                      {isLoadingModels ? (
+                        <div className="p-3 bg-blue-50 border border-blue-200 rounded-md w-full">
+                          <p className="text-sm text-blue-700">Loading {formData.brand} models...</p>
+                        </div>
+                      ) : (
+                        <Combobox
+                          options={modelOptions}
+                          value={formData.model}
+                          onValueChange={(value) => setFormData({...formData, model: value})}
+                          placeholder={
+                            !formData.brand 
+                              ? "Select a brand first..." 
+                              : modelOptions.length > 0
+                                ? "Type to search models..."
+                                : "Type any model name..."
+                          }
+                          disabled={!formData.brand || isLoadingModels}
+                        />
+                      )}
+                    </div>
+                    <div className="min-h-[20px] mt-1">
+                      {formData.brand && !isLoadingModels && (
+                        <p className="text-xs text-gray-500">
+                          {modelOptions.length > 0 
+                            ? `${modelOptions.length} models found • You can also type a custom model name`
+                            : "No predefined models found • Type any model name"
+                          }
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
 
               <DialogFooter className="flex gap-2">
-                <Button variant="outline" onClick={() => setIsAddModalOpen(false)}>
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleAddGuitar}
-                  className="bg-teal-600 hover:bg-teal-700 flex items-center gap-2"
-                  disabled={!formData.type || !formData.brand || !formData.model}
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ duration: 0.1 }}
                 >
-                  <Plus className="w-4 h-4" />
-                  Start Tracking
-                </Button>
+                  <Button variant="outline" onClick={() => setIsAddModalOpen(false)}>
+                    Cancel
+                  </Button>
+                </motion.div>
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ duration: 0.1 }}
+                >
+                  <Button 
+                    onClick={handleAddGuitar}
+                    className="bg-teal-600 hover:bg-teal-700 flex items-center gap-2"
+                    disabled={!formData.type || !formData.brand || !formData.model}
+                  >
+                    <Plus className="w-4 h-4" />
+                    Start Tracking
+                  </Button>
+                </motion.div>
               </DialogFooter>
             </DialogContent>
           </Dialog>
 
           {/* Tracked Guitar Cards */}
-          {trackedGuitars.map((guitar) => (
-            <Card key={guitar.id} className="hover:shadow-lg transition-shadow duration-200 relative">
-              <CardHeader className="pb-3">
-                {/* Remove Button */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="absolute top-2 right-2 h-8 w-8 p-0 text-gray-400 hover:text-red-500 hover:bg-red-50 z-10"
-                  onClick={() => handleRemoveGuitar(guitar)}
-                  title="Remove guitar from tracking"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+          {trackedGuitars.map((guitar, index) => {
+            const hasDeals = guitar.dealsCount && guitar.dealsCount > 0;
+            const hasGoodDeal = guitar.marketPrice && guitar.bestDealPrice && guitar.bestDealPrice < guitar.marketPrice * 0.9;
+            const savingsAmount = guitar.marketPrice && guitar.bestDealPrice ? guitar.marketPrice - guitar.bestDealPrice : 0;
+            const savingsPercent = guitar.marketPrice && guitar.bestDealPrice ? ((guitar.marketPrice - guitar.bestDealPrice) / guitar.marketPrice) * 100 : 0;
+            const msrp = guitar.specs?.msrp || (guitar.marketPrice ? guitar.marketPrice * 1.3 : null);
+            
+            return (
+              <motion.div
+                key={guitar.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ 
+                  duration: 0.3, 
+                  delay: index * 0.1,
+                  ease: [0.16, 1, 0.3, 1]
+                }}
+                whileHover={{ 
+                  y: -8,
+                  transition: { duration: 0.2 }
+                }}
+              >
+                <Card className="hover:shadow-xl transition-all duration-300 relative group border-0 shadow-md hover:shadow-2xl">
+                {/* Deal Status Indicator */}
+                {hasGoodDeal && (
+                  <div className="absolute -top-2 -right-2 z-20">
+                    <Badge className="bg-red-500 text-white shadow-lg animate-pulse">
+                      🔥 Great Deal!
+                    </Badge>
+                  </div>
+                )}
                 
-                <div className="w-full h-32 bg-gray-200 rounded-lg mb-3 overflow-hidden">
-                  {guitar.imageUrl ? (
-                    <img 
-                      src={guitar.imageUrl} 
-                      alt={`${guitar.brand} ${guitar.model}`}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        // Fallback to guitar icon if image fails to load
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        target.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center"><svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg></div>';
-                      }}
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Guitar className="w-8 h-8 text-gray-400" />
-                    </div>
-                  )}
-                </div>
-                <CardTitle className="text-lg">{guitar.brand} {guitar.model}</CardTitle>
-                <Badge variant="secondary" className="w-fit">
-                  {guitar.type}
-                </Badge>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="space-y-3">
-                  {/* Market Price Info */}
-                  {guitar.marketPrice && (
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Market Price:</span>
-                      <span className="font-semibold text-gray-900">${guitar.marketPrice}</span>
-                    </div>
-                  )}
+                <CardHeader className="pb-3">
+                  {/* Remove Button */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="absolute top-2 right-2 h-8 w-8 p-0 text-gray-400 hover:text-red-500 hover:bg-red-50 z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => handleRemoveGuitar(guitar)}
+                    title="Remove guitar from tracking"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
                   
-                  {/* Best Deal Info */}
-                  {guitar.bestDealPrice ? (
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Best Deal:</span>
-                      <span className="font-semibold text-green-600">${guitar.bestDealPrice}</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center space-x-2 text-sm text-gray-500">
-                      <Clock className="w-4 h-4" />
-                      <span>Searching for deals...</span>
-                    </div>
-                  )}
+                  {/* Enhanced Image with Loading State */}
+                  <div className="w-full h-36 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg mb-3 overflow-hidden relative">
+                    {guitar.imageUrl ? (
+                      <img 
+                        src={guitar.imageUrl} 
+                        alt={`${guitar.brand} ${guitar.model}`}
+                        className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          target.parentElement!.innerHTML = `
+                            <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-teal-50 to-teal-100">
+                              <div class="text-center">
+                                <svg class="w-12 h-12 text-teal-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path>
+                                </svg>
+                                <p class="text-xs text-teal-600 font-medium">${guitar.brand}</p>
+                              </div>
+                            </div>
+                          `;
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-teal-50 to-teal-100">
+                        <div className="text-center">
+                          <Guitar className="w-12 h-12 text-teal-400 mx-auto mb-2" />
+                          <p className="text-xs text-teal-600 font-medium">{guitar.brand}</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Deal Count Overlay */}
+                    {hasDeals && (
+                      <div className="absolute bottom-2 left-2">
+                        <Badge variant="secondary" className="bg-white/90 text-gray-700 text-xs">
+                          {guitar.dealsCount} deals
+                        </Badge>
+                      </div>
+                    )}
+                  </div>
                   
-                  {/* Deal Count */}
-                  {guitar.dealsCount !== undefined && (
-                    <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <DollarSign className="w-4 h-4" />
-                      <span>{guitar.dealsCount} deals found</span>
+                  <div className="space-y-1">
+                    <CardTitle className="text-lg leading-tight">{guitar.brand} {guitar.model}</CardTitle>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="text-xs">
+                        {guitar.type}
+                      </Badge>
+                      {guitar.specs?.tier && (
+                        <Badge variant="outline" className="text-xs">
+                          {guitar.specs.tier}
+                        </Badge>
+                      )}
                     </div>
-                  )}
+                  </div>
+                </CardHeader>
+                
+                <CardContent className="pt-0 space-y-3">
+                  {/* Price Summary */}
+                  <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+                    {/* MSRP vs Market */}
+                    {msrp && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-500">MSRP:</span>
+                        <span className="text-gray-400 line-through">${msrp.toFixed(0)}</span>
+                      </div>
+                    )}
+                    
+                    {/* Market Price */}
+                    {guitar.marketPrice && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Avg Market:</span>
+                        <span className="font-semibold text-gray-900">${guitar.marketPrice.toFixed(0)}</span>
+                      </div>
+                    )}
+                    
+                    {/* Best Deal */}
+                    {guitar.bestDealPrice ? (
+                      <div className="flex items-center justify-between text-sm border-t border-gray-200 pt-2">
+                        <span className="text-green-700 font-medium">Best Deal:</span>
+                        <span className="font-bold text-green-700 text-lg">${guitar.bestDealPrice.toFixed(0)}</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-2 text-sm text-gray-500 border-t border-gray-200 pt-2">
+                        <Clock className="w-4 h-4 animate-spin" />
+                        <span>Finding deals...</span>
+                      </div>
+                    )}
+                  </div>
                   
-                  {/* Savings Badge */}
-                  {guitar.marketPrice && guitar.bestDealPrice && guitar.marketPrice > guitar.bestDealPrice && (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-2">
+                  {/* Savings Highlight */}
+                  {hasGoodDeal && (
+                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-3">
                       <div className="text-center">
                         <div className="text-lg font-bold text-green-700">
-                          ${(guitar.marketPrice - guitar.bestDealPrice).toFixed(0)} saved
+                          ${savingsAmount.toFixed(0)} saved
                         </div>
                         <div className="text-xs text-green-600">
-                          {Math.round(((guitar.marketPrice - guitar.bestDealPrice) / guitar.marketPrice) * 100)}% off market price
+                          {savingsPercent.toFixed(0)}% below market • Excellent deal!
                         </div>
                       </div>
                     </div>
                   )}
                   
-                  <div className="flex space-x-2">
+                  {/* Last Updated */}
+                  <div className="text-xs text-gray-400 text-center">
+                    Added {new Date(guitar.createdAt).toLocaleDateString()}
+                  </div>
+                  
+                  {/* Action Buttons */}
+                  <div className="flex space-x-2 pt-2">
                     <Button 
                       variant="default" 
                       size="sm" 
@@ -562,7 +660,7 @@ export default function Dashboard() {
                         router.push(`/guitars/guitar-id?${params.toString()}`);
                       }}
                     >
-                      View Details
+                      {hasGoodDeal ? '🔥 View Deal' : 'View Details'}
                     </Button>
                     <Button 
                       variant="outline" 
@@ -574,10 +672,11 @@ export default function Dashboard() {
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            </motion.div>
+            )
+          })}
         </div>
       </main>
 

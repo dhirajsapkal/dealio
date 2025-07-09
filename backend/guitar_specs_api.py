@@ -140,6 +140,77 @@ class GuitarSpecsAPI:
         }
         return placeholders.get(guitar_type, placeholders["Electric"])
     
+    def _generate_guitar_specific_image(self, brand: str, model: str, guitar_type: str) -> str:
+        """Generate guitar-specific image URLs based on brand and model"""
+        
+        # Guitar-specific image collections from Unsplash with better search terms
+        guitar_images = {
+            # Gibson guitars
+            ("Gibson", "Les Paul"): "https://images.unsplash.com/photo-1564186763535-ebb21ef5277f?w=400",  # Les Paul style
+            ("Gibson", "SG"): "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400",  # SG style
+            ("Gibson", "Flying V"): "https://images.unsplash.com/photo-1564186763535-ebb21ef5277f?w=400", 
+            ("Gibson", "Explorer"): "https://images.unsplash.com/photo-1520166012956-add9ba0835cb?w=400",
+            ("Gibson", "ES"): "https://images.unsplash.com/photo-1572654672781-9b0bb17b0f1c?w=400",  # Hollow body
+            
+            # Fender guitars  
+            ("Fender", "Stratocaster"): "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400",  # Stratocaster
+            ("Fender", "Telecaster"): "https://images.unsplash.com/photo-1585735371398-3b6d6c1421bb?w=400",  # Telecaster
+            ("Fender", "Jazzmaster"): "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400",
+            ("Fender", "Jaguar"): "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400",
+            
+            # Other brands - Electric
+            ("PRS", ""): "https://images.unsplash.com/photo-1564186763535-ebb21ef5277f?w=400", 
+            ("Ibanez", ""): "https://images.unsplash.com/photo-1520166012956-add9ba0835cb?w=400",
+            ("ESP", ""): "https://images.unsplash.com/photo-1564186763535-ebb21ef5277f?w=400",
+            ("Jackson", ""): "https://images.unsplash.com/photo-1520166012956-add9ba0835cb?w=400",
+            ("Schecter", ""): "https://images.unsplash.com/photo-1564186763535-ebb21ef5277f?w=400",
+            
+            # Acoustic guitars
+            ("Martin", ""): "https://images.unsplash.com/photo-1516924962500-2b4b3b99ea02?w=400",  # Acoustic
+            ("Taylor", ""): "https://images.unsplash.com/photo-1525201548942-d8732f6617a0?w=400",  # Acoustic
+            ("Gibson", "J"): "https://images.unsplash.com/photo-1516924962500-2b4b3b99ea02?w=400",  # Gibson acoustic
+            ("Gibson", "Hummingbird"): "https://images.unsplash.com/photo-1525201548942-d8732f6617a0?w=400",
+            ("Gibson", "Dove"): "https://images.unsplash.com/photo-1516924962500-2b4b3b99ea02?w=400",
+            
+            # Bass guitars
+            ("Fender", "Precision"): "https://images.unsplash.com/photo-1550985068-687d5a0b590b?w=400",  # Bass
+            ("Fender", "Jazz"): "https://images.unsplash.com/photo-1550985068-687d5a0b590b?w=400",
+        }
+        
+        # Try exact brand + model match first
+        for (brand_key, model_key), image_url in guitar_images.items():
+            if brand == brand_key and model_key in model:
+                return image_url
+        
+        # Try brand match
+        for (brand_key, model_key), image_url in guitar_images.items():
+            if brand == brand_key and model_key == "":
+                return image_url
+        
+        # Type-based fallbacks with more variety
+        type_images = {
+            "Electric": [
+                "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400",  # Stratocaster style
+                "https://images.unsplash.com/photo-1564186763535-ebb21ef5277f?w=400",  # Les Paul style  
+                "https://images.unsplash.com/photo-1520166012956-add9ba0835cb?w=400",  # Modern electric
+                "https://images.unsplash.com/photo-1585735371398-3b6d6c1421bb?w=400",  # Telecaster style
+            ],
+            "Acoustic": [
+                "https://images.unsplash.com/photo-1516924962500-2b4b3b99ea02?w=400",  # Classic acoustic
+                "https://images.unsplash.com/photo-1525201548942-d8732f6617a0?w=400",  # Modern acoustic
+                "https://images.unsplash.com/photo-1445985543470-41fba5c3144a?w=400",  # Acoustic close-up
+            ],
+            "Bass": [
+                "https://images.unsplash.com/photo-1550985068-687d5a0b590b?w=400",  # Bass guitar
+                "https://images.unsplash.com/photo-1569443693539-175ea9f007e8?w=400",  # Different bass
+            ]
+        }
+        
+        # Return a variety of images based on type + hash of brand+model for consistency
+        type_images_list = type_images.get(guitar_type, type_images["Electric"])
+        image_index = hash(f"{brand}{model}") % len(type_images_list)
+        return type_images_list[image_index]
+    
     def _infer_guitar_type(self, model: str) -> str:
         """Infer guitar type from model name"""
         model_lower = model.lower()
@@ -433,8 +504,8 @@ def _get_basic_guitar_specs(brand: str, model: str) -> Dict:
     guitar_type = api._infer_guitar_type(model)
     msrp = api._estimate_msrp(brand, model)
     
-    # Include a placeholder image URL for now
-    guitar_image = api._get_placeholder_image(guitar_type)
+    # Generate guitar-specific image instead of generic placeholder
+    guitar_image = api._generate_guitar_specific_image(brand, model, guitar_type)
     
     return {
         "brand": brand,
