@@ -14,11 +14,8 @@ import { Search, Guitar, Plus, TrendingUp, Clock, DollarSign, X, Trash2 } from '
 
 // Helper function to get the correct API URL
 const getApiUrl = () => {
-  // Use local backend for development testing
-  return 'http://localhost:8000';
-  
-  // Alternative: Use environment variable with local fallback
-  // return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+  // Use environment variable for production/preview, with a fallback for local development.
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 };
 
 interface TrackedGuitar {

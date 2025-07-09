@@ -63,7 +63,8 @@ interface ScrapingStatus {
 
 // Helper function to get the correct API URL
 const getApiUrl = () => {
-  return 'http://localhost:8000';
+  // Use environment variable for production/preview, with a fallback for local development.
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 };
 
 function GuitarDetailPageContent() {
