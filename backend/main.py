@@ -763,8 +763,17 @@ async def get_guitars_by_model(brand: str, model: str, ebay_api_key: Optional[st
         if DYNAMIC_DEALS_AVAILABLE:
             logger.info(f"Using dynamic deals generator for {brand} {model}")
             
-            # Generate enhanced guitar specifications
+            # Generate enhanced guitar specifications with image
             guitar_specs = get_guitar_specs_sync(brand, model)
+            
+            # Get guitar image URL
+            try:
+                from guitar_specs_api import GuitarSpecsAPI
+                specs_api = GuitarSpecsAPI()
+                guitar_image = await specs_api.get_guitar_image(brand, model, guitar_specs.get("type", "Electric"))
+            except Exception as e:
+                logger.warning(f"Could not fetch guitar image: {e}")
+                guitar_image = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400"  # Fallback
             
             # Generate dynamic deals
             dynamic_listings = generate_guitar_deals(brand, model, count=15)
@@ -793,6 +802,7 @@ async def get_guitars_by_model(brand: str, model: str, ebay_api_key: Optional[st
                 "api_status": "Dynamic deal generation successful",
                 "message": f"Generated {len(dynamic_listings)} realistic deals for {brand} {model}",
                 "guitar_specs": guitar_specs,
+                "guitar_image": guitar_image,
                 "deal_statistics": deal_stats
             }
         

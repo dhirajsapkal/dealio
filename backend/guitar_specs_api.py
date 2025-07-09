@@ -8,6 +8,7 @@ import json
 from typing import Dict, List, Optional, Tuple
 from datetime import datetime, timedelta
 import asyncio
+import os
 
 # Try to import optional dependencies
 try:
@@ -27,7 +28,7 @@ except ImportError:
         return None
 
 # Configuration
-UNSPLASH_ACCESS_KEY = "YOUR_UNSPLASH_ACCESS_KEY"  # Free API key
+UNSPLASH_ACCESS_KEY = os.getenv("UNSPLASH_ACCESS_KEY", "HYfkuol6lFF-kuzG4IrD6-CZAFtami41qhSlJ0jn1pc")
 FINDMYGUITAR_BASE_URL = "https://findmyguitar.com"
 
 class GuitarSpecsAPI:
