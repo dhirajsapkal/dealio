@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 // import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Combobox } from '@/components/ui/combobox';
 import { Badge } from '@/components/ui/badge';
-import { Search, Guitar, Plus, TrendingUp, Clock, DollarSign, X, Trash2 } from 'lucide-react';
+import { Guitar, Plus, TrendingUp, Clock, DollarSign, X, Trash2 } from 'lucide-react';
 
 // Helper function to get the correct API URL with intelligent environment detection
 const getApiUrl = () => {
@@ -287,16 +287,7 @@ export default function Dashboard() {
               </Badge>
             </div>
 
-            {/* Search Bar */}
-            <div className="flex-1 max-w-lg mx-8">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  placeholder="Search guitars, brands, or models..."
-                  className="pl-10 bg-gray-50 border-gray-200"
-                />
-              </div>
-            </div>
+
 
             {/* User Profile Placeholder */}
             <div className="flex items-center space-x-4">
