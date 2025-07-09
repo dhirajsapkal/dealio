@@ -9,10 +9,10 @@ import { Progress } from '@/components/ui/progress';
 
 // Import all detail components
 import GuitarDetailOverview from '@/components/guitar-detail/GuitarDetailOverview';
-import BestDealCard from '@/components/guitar-detail/BestDealCard';
-import DealScoreVisualization from '@/components/guitar-detail/DealScoreVisualization';
-import DealAnalysisAccordion from '@/components/guitar-detail/DealAnalysisAccordion';
-import AlternativeDealsList from '@/components/guitar-detail/AlternativeDealsList';
+// import BestDealCard from '@/components/guitar-detail/BestDealCard';
+// import DealScoreVisualization from '@/components/guitar-detail/DealScoreVisualization';
+// import DealAnalysisAccordion from '@/components/guitar-detail/DealAnalysisAccordion';
+// import AlternativeDealsList from '@/components/guitar-detail/AlternativeDealsList';
 
 interface GuitarData {
   id: string;
