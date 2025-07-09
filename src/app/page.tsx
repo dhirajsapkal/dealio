@@ -1,103 +1,513 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Combobox } from '@/components/ui/combobox';
+import { Badge } from '@/components/ui/badge';
+import { Search, Guitar, Plus, TrendingUp, Clock, DollarSign, X, Trash2 } from 'lucide-react';
+
+interface TrackedGuitar {
+  id: string;
+  type: 'Electric' | 'Acoustic' | 'Bass';
+  brand: string;
+  model: string;
+  imageUrl?: string;
+  marketPrice?: number;
+  bestDealPrice?: number;
+  dealsCount?: number;
+  lastDeal?: {
+    price: number;
+    retailer: string;
+    date: string;
+    dealScore?: number;
+  };
+  createdAt: string;
+}
+
+export default function Dashboard() {
+  const router = useRouter();
+  const [apiStatus, setApiStatus] = useState<string>('Checking...');
+  const [trackedGuitars, setTrackedGuitars] = useState<TrackedGuitar[]>([]);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [guitarToRemove, setGuitarToRemove] = useState<TrackedGuitar | null>(null);
+  const [formData, setFormData] = useState({
+    type: '',
+    brand: '',
+    model: ''
+  });
+  const [brandOptions, setBrandOptions] = useState<Array<{value: string, label: string}>>([]);
+  const [modelOptions, setModelOptions] = useState<Array<{value: string, label: string}>>([]);
+  const [isLoadingModels, setIsLoadingModels] = useState(false);
+
+  // Load tracked guitars from localStorage on component mount
+  useEffect(() => {
+    const savedGuitars = localStorage.getItem('dealio-tracked-guitars');
+    if (savedGuitars) {
+      try {
+        const parsedGuitars = JSON.parse(savedGuitars);
+        setTrackedGuitars(parsedGuitars);
+      } catch (error) {
+        console.error('Error loading tracked guitars from localStorage:', error);
+      }
+    }
+  }, []);
+
+  // Save tracked guitars to localStorage whenever they change
+  useEffect(() => {
+    if (trackedGuitars.length > 0) {
+      localStorage.setItem('dealio-tracked-guitars', JSON.stringify(trackedGuitars));
+    } else {
+      localStorage.removeItem('dealio-tracked-guitars');
+    }
+  }, [trackedGuitars]);
+
+  // Load guitar brands on component mount
+  useEffect(() => {
+    const loadBrands = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/guitars/brands`);
+        const data = await response.json();
+        const options = data.brands.map((brand: string) => ({
+          value: brand,
+          label: brand
+        }));
+        setBrandOptions(options);
+      } catch (error) {
+        console.error('Error loading brands:', error);
+      }
+    };
+    loadBrands();
+  }, []);
+
+  // Load models when brand or type changes
+  useEffect(() => {
+    const loadModels = async () => {
+      if (!formData.brand) {
+        setModelOptions([]);
+        return;
+      }
+
+      setIsLoadingModels(true);
+      try {
+        const params = new URLSearchParams({
+          brand: formData.brand,
+          ...(formData.type && { guitar_type: formData.type })
+        });
+        
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/guitars/models?${params}`);
+        const data = await response.json();
+        
+        let models = data.models || [];
+        
+        // If we have models by type and a type is selected, use those
+        if (data.models_by_type && formData.type && data.models_by_type[formData.type]) {
+          models = data.models_by_type[formData.type];
+        }
+        
+        const options = models.map((model: string) => ({
+          value: model,
+          label: model
+        }));
+        
+        setModelOptions(options);
+      } catch (error) {
+        console.error('Error loading models:', error);
+        setModelOptions([]);
+      } finally {
+        setIsLoadingModels(false);
+      }
+    };
+
+    loadModels();
+  }, [formData.brand, formData.type]);
+
+  // Test API connectivity
+  useEffect(() => {
+    const testApiConnection = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/health`);
+        const data = await response.json();
+        setApiStatus(data.status === 'ok' ? 'Connected' : 'Error');
+      } catch (error) {
+        setApiStatus('Offline');
+      }
+    };
+    testApiConnection();
+  }, []);
+
+  const getGuitarImage = async (brand: string, model: string): Promise<string | undefined> => {
+    try {
+      // Use a guitar image service or fallback to a placeholder
+      // For now, we'll use a placeholder service that generates images based on text
+      const query = encodeURIComponent(`${brand} ${model} guitar`);
+      const imageUrl = `https://images.unsplash.com/400x300/?${query}`;
+      
+      // Test if the image exists by trying to fetch it
+      const response = await fetch(imageUrl, { method: 'HEAD' });
+      if (response.ok) {
+        return imageUrl;
+      }
+    } catch (error) {
+      console.error('Error fetching guitar image:', error);
+    }
+    
+    // Fallback to a generic guitar image
+    return `https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop&crop=center`;
+  };
+
+  const fetchGuitarMarketData = async (brand: string, model: string) => {
+    try {
+              const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/guitars/${encodeURIComponent(brand)}/${encodeURIComponent(model)}`);
+      if (response.ok) {
+        const data = await response.json();
+        return {
+          marketPrice: data.market_price,
+          dealsCount: data.count,
+          bestDealPrice: data.listings?.[0]?.price
+        };
+      }
+    } catch (error) {
+      console.error('Error fetching market data:', error);
+    }
+    return {};
+  };
+
+  const handleAddGuitar = async () => {
+    if (formData.type && formData.brand && formData.model) {
+      // Show loading state or disable button here if needed
+      
+      const [imageUrl, marketData] = await Promise.all([
+        getGuitarImage(formData.brand, formData.model),
+        fetchGuitarMarketData(formData.brand, formData.model)
+      ]);
+
+      const newGuitar: TrackedGuitar = {
+        id: Math.random().toString(36).substr(2, 9),
+        type: formData.type as 'Electric' | 'Acoustic' | 'Bass',
+        brand: formData.brand,
+        model: formData.model,
+        imageUrl,
+        createdAt: new Date().toISOString(),
+        ...marketData
+      };
+      
+      setTrackedGuitars([...trackedGuitars, newGuitar]);
+      setFormData({ type: '', brand: '', model: '' });
+      setIsAddModalOpen(false);
+    }
+  };
+
+  const handleRemoveGuitar = (guitar: TrackedGuitar) => {
+    setGuitarToRemove(guitar);
+  };
+
+  const confirmRemoveGuitar = () => {
+    if (guitarToRemove) {
+      setTrackedGuitars(trackedGuitars.filter(guitar => guitar.id !== guitarToRemove.id));
+      setGuitarToRemove(null);
+    }
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div className="min-h-screen bg-gray-50">
+      {/* Top Navigation */}
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div className="px-6 py-4">
+          <div className="flex items-center justify-between">
+            {/* Logo */}
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center justify-center w-8 h-8 bg-teal-600 rounded-lg">
+                <TrendingUp className="w-5 h-5 text-white" />
+              </div>
+              <h1 className="text-2xl font-bold text-gray-900">Dealio</h1>
+              <Badge variant="secondary" className="text-xs">
+                {apiStatus}
+              </Badge>
+            </div>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            {/* Search Bar */}
+            <div className="flex-1 max-w-lg mx-8">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Search guitars, brands, or models..."
+                  className="pl-10 bg-gray-50 border-gray-200"
+                />
+              </div>
+            </div>
+
+            {/* User Profile Placeholder */}
+            <div className="flex items-center space-x-4">
+              <Button variant="ghost" size="sm">
+                Profile
+              </Button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content - Full Width */}
+      <main className="max-w-7xl mx-auto px-6 py-8">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            {trackedGuitars.length === 0 ? 'Guitar Deal Tracker' : `Tracked Guitars (${trackedGuitars.length})`}
+          </h2>
+          <p className="text-gray-600">
+            {trackedGuitars.length === 0 
+              ? 'Start tracking deals and price history for your favorite guitars' 
+              : 'Monitor deals and price changes for your favorite guitars'
+            }
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {/* CTA Card - Always First */}
+          <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+            <DialogTrigger asChild>
+              <Card className="border-2 border-dashed border-teal-300 hover:border-teal-400 transition-colors duration-200 cursor-pointer bg-teal-50/50 hover:bg-teal-50">
+                <CardContent className="flex flex-col items-center justify-center h-full p-6 text-center min-h-[280px]">
+                  <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mb-4">
+                    <Plus className="w-8 h-8 text-teal-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    Track New Guitar
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    {trackedGuitars.length === 0 
+                      ? 'Start monitoring deals and price history across online marketplaces'
+                      : 'Add another guitar to track deals and price history'
+                    }
+                  </p>
+                  <Button variant="ghost" className="text-teal-600 hover:text-teal-700 hover:bg-teal-100">
+                    Get Started
+                  </Button>
+                </CardContent>
+              </Card>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Track New Guitar</DialogTitle>
+                <DialogDescription>
+                  Add a guitar to track deals and price history across online marketplaces.
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="grid gap-4 py-4">
+                {/* Guitar Type */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Guitar Type</label>
+                  <div className="flex space-x-2">
+                    {['Electric', 'Acoustic', 'Bass'].map((type) => (
+                      <Button
+                        key={type}
+                        variant={formData.type === type ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setFormData({ ...formData, type })}
+                        className={formData.type === type ? 'bg-teal-600 hover:bg-teal-700' : ''}
+                      >
+                        {type}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Brand */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Brand</label>
+                  <Combobox
+                    options={brandOptions}
+                    value={formData.brand}
+                    onValueChange={(value) => setFormData({...formData, brand: value, model: ''})}
+                    placeholder="Search for a brand..."
+                  />
+                </div>
+
+                {/* Model */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Model Name</label>
+                  <Combobox
+                    options={modelOptions}
+                    value={formData.model}
+                    onValueChange={(value) => setFormData({...formData, model: value})}
+                    placeholder={
+                      !formData.brand 
+                        ? "Select a brand first..." 
+                        : isLoadingModels 
+                          ? "Loading models..." 
+                          : "Search for a model..."
+                    }
+                    disabled={!formData.brand || isLoadingModels}
+                  />
+                  {formData.brand && modelOptions.length === 0 && !isLoadingModels && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      No predefined models found. You can type a custom model name.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsAddModalOpen(false)}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleAddGuitar}
+                  className="bg-teal-600 hover:bg-teal-700"
+                  disabled={!formData.type || !formData.brand || !formData.model}
+                >
+                  Add Guitar
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Tracked Guitar Cards */}
+          {trackedGuitars.map((guitar) => (
+            <Card key={guitar.id} className="hover:shadow-lg transition-shadow duration-200 relative">
+              <CardHeader className="pb-3">
+                {/* Remove Button */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute top-2 right-2 h-8 w-8 p-0 text-gray-400 hover:text-red-500 hover:bg-red-50 z-10"
+                  onClick={() => handleRemoveGuitar(guitar)}
+                  title="Remove guitar from tracking"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+                
+                <div className="w-full h-32 bg-gray-200 rounded-lg mb-3 overflow-hidden">
+                  {guitar.imageUrl ? (
+                    <img 
+                      src={guitar.imageUrl} 
+                      alt={`${guitar.brand} ${guitar.model}`}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        // Fallback to guitar icon if image fails to load
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        target.parentElement!.innerHTML = '<div class="w-full h-full flex items-center justify-center"><svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg></div>';
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Guitar className="w-8 h-8 text-gray-400" />
+                    </div>
+                  )}
+                </div>
+                <CardTitle className="text-lg">{guitar.brand} {guitar.model}</CardTitle>
+                <Badge variant="secondary" className="w-fit">
+                  {guitar.type}
+                </Badge>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-3">
+                  {/* Market Price Info */}
+                  {guitar.marketPrice && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Market Price:</span>
+                      <span className="font-semibold text-gray-900">${guitar.marketPrice}</span>
+                    </div>
+                  )}
+                  
+                  {/* Best Deal Info */}
+                  {guitar.bestDealPrice ? (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Best Deal:</span>
+                      <span className="font-semibold text-green-600">${guitar.bestDealPrice}</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-2 text-sm text-gray-500">
+                      <Clock className="w-4 h-4" />
+                      <span>Searching for deals...</span>
+                    </div>
+                  )}
+                  
+                  {/* Deal Count */}
+                  {guitar.dealsCount !== undefined && (
+                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                      <DollarSign className="w-4 h-4" />
+                      <span>{guitar.dealsCount} deals found</span>
+                    </div>
+                  )}
+                  
+                  {/* Savings Badge */}
+                  {guitar.marketPrice && guitar.bestDealPrice && guitar.marketPrice > guitar.bestDealPrice && (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-2">
+                      <div className="text-center">
+                        <div className="text-lg font-bold text-green-700">
+                          ${(guitar.marketPrice - guitar.bestDealPrice).toFixed(0)} saved
+                        </div>
+                        <div className="text-xs text-green-600">
+                          {Math.round(((guitar.marketPrice - guitar.bestDealPrice) / guitar.marketPrice) * 100)}% off market price
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="flex space-x-2">
+                    <Button 
+                      variant="default" 
+                      size="sm" 
+                      className="flex-1 bg-teal-600 hover:bg-teal-700"
+                      onClick={() => {
+                        const params = new URLSearchParams({
+                          brand: guitar.brand,
+                          model: guitar.model,
+                          type: guitar.type
+                        });
+                        router.push(`/guitars/guitar-id?${params.toString()}`);
+                      }}
+                    >
+                      View Details
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleRemoveGuitar(guitar)}
+                      className="hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+                      title="Remove from tracking"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+      {/* Remove Guitar Confirmation Dialog */}
+      <AlertDialog open={!!guitarToRemove} onOpenChange={() => setGuitarToRemove(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Guitar from Tracking</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to stop tracking the{' '}
+              <span className="font-semibold">
+                {guitarToRemove?.brand} {guitarToRemove?.model}
+              </span>?{' '}
+              This action cannot be undone and you'll lose all tracking history for this guitar.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmRemoveGuitar}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Remove Guitar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
