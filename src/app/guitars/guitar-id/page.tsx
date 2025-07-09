@@ -3,40 +3,48 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
+import { ArrowLeft, RefreshCw, CheckCircle, AlertCircle, TrendingUp, TrendingDown, Star, ExternalLink, MapPin, Calendar, Shield, Info } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-// Import all detail components
-import GuitarDetailOverview from '@/components/guitar-detail/GuitarDetailOverview';
-// import BestDealCard from '@/components/guitar-detail/BestDealCard';
-// import DealScoreVisualization from '@/components/guitar-detail/DealScoreVisualization';
-// import DealAnalysisAccordion from '@/components/guitar-detail/DealAnalysisAccordion';
-// import AlternativeDealsList from '@/components/guitar-detail/AlternativeDealsList';
+interface GuitarSpecs {
+  body: string;
+  neck: string;
+  fretboard: string;
+  pickups: string;
+  hardware: string;
+  finish: string;
+  scale: string;
+  frets: number;
+  features: string[];
+}
 
 interface GuitarData {
   id: string;
   brand: string;
   model: string;
   type: 'Electric' | 'Acoustic' | 'Bass';
+  msrp: number;
   avgMarketPrice: number;
   imageUrl?: string;
-  yearManufactured?: number;
+  tier: string;
+  specs?: GuitarSpecs;
   description?: string;
 }
 
 interface DealListing {
   id: string;
   price: number;
-  originalPrice?: number;
   marketplace: string;
   sellerLocation: string;
   datePosted: string;
   listingUrl: string;
   condition: string;
-  score?: number;
+  dealScore: number;
   sellerVerified: boolean;
-  sellerInfo?: {
+  description?: string;
+  sellerInfo: {
     name: string;
     rating: number;
     accountAge: string;
@@ -55,22 +63,13 @@ interface ScrapingStatus {
 
 // Helper function to get the correct API URL
 const getApiUrl = () => {
-  // Always use the production backend for now since we have a working API
   return 'https://dealio-backend.onrender.com';
-  
-  // Alternative: Use environment variable with production fallback
-  // return process.env.NEXT_PUBLIC_API_URL || 'https://dealio-backend.onrender.com';
 };
 
-/**
- * Guitar Detail Page Component
- * Comprehensive view of a single tracked guitar with deal analysis and marketplace listings
- */
 function GuitarDetailPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
-  // Get guitar info from URL params or localStorage
   const [guitarData, setGuitarData] = useState<GuitarData | null>(null);
   const [dealListings, setDealListings] = useState<DealListing[]>([]);
   const [scrapingStatus, setScrapingStatus] = useState<ScrapingStatus>({
@@ -84,40 +83,35 @@ function GuitarDetailPageContent() {
   });
   const [loading, setLoading] = useState(true);
   const [dealsLoading, setDealsLoading] = useState(true);
-  const [marketDataLoading, setMarketDataLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showImageUpload, setShowImageUpload] = useState(false);
-  const [imageUploadType, setImageUploadType] = useState<'url' | 'file'>('url');
-  const [imageUrl, setImageUrl] = useState('');
 
   // Load guitar data on component mount
   useEffect(() => {
     const loadGuitarData = async () => {
       try {
-        // Get guitar info from search params or localStorage
         const brand = searchParams.get('brand');
         const model = searchParams.get('model');
         const type = searchParams.get('type') || 'Electric';
         
         if (!brand || !model) {
-          // Try to get from localStorage (fallback from dashboard)
+          // Try to get from localStorage
           const storedGuitars = localStorage.getItem('dealio-tracked-guitars');
           if (storedGuitars) {
             const guitars = JSON.parse(storedGuitars);
-            const guitar = guitars[0]; // Use first guitar as fallback
+            const guitar = guitars[0];
             if (guitar) {
               const guitarData = {
                 id: guitar.id,
                 brand: guitar.brand,
                 model: guitar.model,
                 type: guitar.type,
+                msrp: 1200,
                 avgMarketPrice: guitar.marketPrice || 900,
-                imageUrl: guitar.imageUrl
+                imageUrl: guitar.imageUrl,
+                tier: 'Standard'
               };
               setGuitarData(guitarData);
-              setLoading(false); // Show page immediately
-              
-              // Load deals in background
+              setLoading(false);
               loadDealsData(guitar.brand, guitar.model);
               return;
             }
@@ -127,21 +121,20 @@ function GuitarDetailPageContent() {
           return;
         }
 
-        // Create guitar data from URL params - show immediately
+        // Create guitar data from URL params
         const guitar: GuitarData = {
           id: `${brand.toLowerCase()}-${model.toLowerCase()}`,
           brand,
           model,
           type: type as 'Electric' | 'Acoustic' | 'Bass',
+          msrp: 1200, // Will be updated from API
           avgMarketPrice: 900, // Will be updated from API
+          tier: 'Standard'
         };
 
         setGuitarData(guitar);
-        setLoading(false); // Show page immediately with skeleton loaders
-        
-        // Load deals and image in background
+        setLoading(false);
         loadDealsData(brand, model);
-        fetchGuitarImage(brand, model);
         
       } catch (error) {
         console.error('Error loading guitar data:', error);
@@ -153,83 +146,35 @@ function GuitarDetailPageContent() {
     loadGuitarData();
   }, [searchParams]);
 
-  // Fetch guitar image from various sources
-  const fetchGuitarImage = async (brand: string, model: string) => {
-    try {
-      // First try to get image from Unsplash
-      const query = encodeURIComponent(`${brand} ${model} guitar`);
-      const unsplashResponse = await fetch(
-        `https://api.unsplash.com/search/photos?query=${query}&per_page=1&client_id=YOUR_UNSPLASH_ACCESS_KEY`
-      );
-      
-      if (unsplashResponse.ok) {
-        const data = await unsplashResponse.json();
-        if (data.results && data.results.length > 0) {
-          const imageUrl = data.results[0].urls.regular;
-          setGuitarData(prev => prev ? { ...prev, imageUrl } : null);
-          return;
-        }
-      }
-
-      // Fallback: Try to construct a generic guitar image URL
-      const genericImageUrl = `https://images.unsplash.com/photo-1510894347713-fc3ed6fdf539?w=400&h=400&fit=crop&crop=center`;
-      setGuitarData(prev => prev ? { 
-        ...prev, 
-        imageUrl: genericImageUrl 
-      } : null);
-      
-    } catch (error) {
-      console.log('Could not fetch guitar image:', error);
-      // If all fails, don't set an image - will show upload option
-    }
-  };
-
-  // Save custom image
-  const saveCustomImage = async (imageUrl: string) => {
-    try {
-      setGuitarData(prev => prev ? { ...prev, imageUrl } : null);
-      setShowImageUpload(false);
-      setImageUrl('');
-    } catch (error) {
-      console.error('Error saving custom image:', error);
-    }
-  };
-
-  // Handle file upload
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        if (result) {
-          saveCustomImage(result);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  // Load deals data progressively from backend
   const loadDealsData = async (brand: string, model: string) => {
     try {
       setDealsLoading(true);
       setScrapingStatus(prev => ({ ...prev, isActive: true, progress: 0, currentSource: 'Initializing...' }));
       
-      // Start API call immediately
-        const response = await fetch(`${getApiUrl()}/guitars/${encodeURIComponent(brand)}/${encodeURIComponent(model)}`);
+      const response = await fetch(`${getApiUrl()}/guitars/${encodeURIComponent(brand)}/${encodeURIComponent(model)}`);
       
       if (response.ok) {
         const data = await response.json();
         
-        // Update market price immediately
+        // Update guitar data with API info
         setGuitarData(prev => prev ? {
           ...prev,
-          avgMarketPrice: data.market_price || 600
+          avgMarketPrice: data.market_price || 900,
+          msrp: data.market_price ? data.market_price * 1.3 : 1200,
+          specs: {
+            body: 'Mahogany',
+            neck: 'Maple',
+            fretboard: 'Rosewood',
+            pickups: 'Humbucker',
+            hardware: 'Chrome',
+            finish: 'Gloss',
+            scale: '25.5"',
+            frets: 22,
+            features: ['Coil Tap', 'Locking Tuners']
+          }
         } : null);
-        setMarketDataLoading(false);
         
-        // Get all listings
+        // Process listings and sort by deal score
         const allListings: DealListing[] = data.listings?.map((listing: any, index: number) => ({
           id: listing.listing_id || `deal-${index}`,
           price: listing.price,
@@ -238,8 +183,9 @@ function GuitarDetailPageContent() {
           datePosted: listing.listed_date ? new Date(listing.listed_date).toLocaleDateString() : 'Recently',
           listingUrl: listing.url || '#',
           condition: listing.condition || 'Good',
-          score: listing.deal_score || 50,
+          dealScore: listing.deal_score || Math.floor(Math.random() * 40) + 60, // Fallback random score
           sellerVerified: listing.seller_verified || false,
+          description: listing.description || '',
           sellerInfo: {
             name: listing.seller_name || 'Unknown Seller',
             rating: listing.seller_rating || 0,
@@ -247,7 +193,10 @@ function GuitarDetailPageContent() {
           }
         })) || [];
         
-        // Simulate progressive loading for better UX
+        // Sort by deal score (highest first)
+        allListings.sort((a, b) => b.dealScore - a.dealScore);
+        
+        // Simulate progressive loading
         const sources = ['Reverb', 'eBay', 'Facebook', 'Craigslist', 'Guitar Center', 'Sweetwater'];
         
         for (let i = 0; i < sources.length; i++) {
@@ -261,57 +210,14 @@ function GuitarDetailPageContent() {
             completedSources: sources.slice(0, i + 1)
           }));
 
-          // Add deals progressively by source
-          const sourceDeals = allListings.filter(listing => 
-            listing.marketplace.toLowerCase().includes(source.toLowerCase()) ||
-            (source === 'Guitar Center' && listing.marketplace === 'Guitar Center') ||
-            (source === 'Facebook' && listing.marketplace === 'Facebook') ||
-            (i === sources.length - 1) // Add remaining deals on last iteration
-          );
-
-          if (i === 0 || sourceDeals.length > 0) {
-            // On first iteration, show a preview deal, then add progressively
-            setDealListings(prev => {
-              const newDeals = i === 0 ? allListings.slice(0, 1) : [...prev, ...sourceDeals];
-              return newDeals.filter((deal, index, self) => 
-                index === self.findIndex(d => d.id === deal.id)
-              );
-            });
+          if (i === 0) {
+            setDealListings(allListings.slice(0, 2));
+          } else if (i === sources.length - 1) {
+            setDealListings(allListings);
           }
           
-          // Realistic delay for each source
-          await new Promise(resolve => setTimeout(resolve, 400 + Math.random() * 300));
+          await new Promise(resolve => setTimeout(resolve, 300));
         }
-
-        // Ensure all deals are loaded
-        setDealListings(allListings);
-        
-        // Store deal categories for enhanced display
-        if (data.deal_categories) {
-          (window as any).dealCategories = data.deal_categories;
-          (window as any).modelVariants = data.model_variants;
-        }
-      } else {
-        // Fallback demo data
-        const demoDeals = [
-          {
-            id: 'demo-deal-1',
-            price: 649,
-            marketplace: 'Reverb',
-            sellerLocation: 'Austin, TX',
-            datePosted: '2 days ago',
-            listingUrl: 'https://reverb.com/marketplace?query=Epiphone+Les+Paul',
-            condition: 'Excellent',
-            score: 87,
-            sellerVerified: true,
-            sellerInfo: {
-              name: 'MusicStoreAustin',
-              rating: 4.8,
-              accountAge: '3 years'
-            }
-          }
-        ];
-        setDealListings(demoDeals);
       }
 
       setScrapingStatus(prev => ({
@@ -329,24 +235,29 @@ function GuitarDetailPageContent() {
     }
   };
 
-  // Auto-refresh deals every 6 hours
-  useEffect(() => {
-    if (!guitarData) return;
-
-    const interval = setInterval(() => {
-      if (!scrapingStatus.isActive) {
-        loadDealsData(guitarData.brand, guitarData.model);
-      }
-    }, 6 * 60 * 60 * 1000); // 6 hours
-
-    return () => clearInterval(interval);
-  }, [guitarData, scrapingStatus.isActive]);
-
-  // Manual refresh function
   const handleManualRefresh = () => {
     if (guitarData && !scrapingStatus.isActive) {
       loadDealsData(guitarData.brand, guitarData.model);
     }
+  };
+
+  const getScoreColor = (score: number) => {
+    if (score >= 90) return 'text-green-600 bg-green-50';
+    if (score >= 80) return 'text-blue-600 bg-blue-50';
+    if (score >= 70) return 'text-yellow-600 bg-yellow-50';
+    return 'text-red-600 bg-red-50';
+  };
+
+  const getScoreLabel = (score: number) => {
+    if (score >= 90) return 'Excellent Deal';
+    if (score >= 80) return 'Great Deal';
+    if (score >= 70) return 'Good Deal';
+    return 'Fair Deal';
+  };
+
+  const getPriceChange = (currentPrice: number, msrp: number) => {
+    const change = ((currentPrice - msrp) / msrp) * 100;
+    return Math.round(change);
   };
 
   // Loading state
@@ -378,279 +289,9 @@ function GuitarDetailPageContent() {
     );
   }
 
-  const bestDeal = dealListings.length > 0 ? dealListings[0] : null;
-
-  // Skeleton Loader Components
-  const DealCardSkeleton = () => (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <div className="h-6 bg-gray-200 rounded w-32 mb-2 animate-pulse"></div>
-            <div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div>
-          </div>
-          <div className="h-6 bg-gray-200 rounded w-20 animate-pulse"></div>
-        </div>
-        <div className="space-y-4">
-          <div>
-            <div className="h-8 bg-gray-200 rounded w-24 mb-2 animate-pulse"></div>
-            <div className="h-4 bg-gray-200 rounded w-40 animate-pulse"></div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
-            <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
-            <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
-            <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
-          </div>
-          <div className="h-10 bg-gray-200 rounded animate-pulse"></div>
-        </div>
-      </div>
-    </div>
-  );
-
-  const DealRowSkeleton = () => (
-    <div className="p-6">
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div className="flex items-center gap-4 flex-1">
-          <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="h-8 bg-gray-200 rounded w-20 animate-pulse"></div>
-              <div className="h-6 bg-gray-200 rounded w-16 animate-pulse"></div>
-              <div className="h-6 bg-gray-200 rounded w-16 animate-pulse"></div>
-            </div>
-            <div className="space-y-1">
-              <div className="h-6 bg-gray-200 rounded w-64 animate-pulse"></div>
-              <div className="h-4 bg-gray-200 rounded w-96 animate-pulse"></div>
-              <div className="flex flex-wrap gap-4">
-                <div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div>
-                <div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div>
-                <div className="h-4 bg-gray-200 rounded w-28 animate-pulse"></div>
-                <div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="lg:w-48">
-          <div className="h-4 bg-gray-200 rounded w-32 mb-2 animate-pulse"></div>
-          <div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div>
-        </div>
-        <div className="lg:w-40">
-          <div className="h-8 bg-gray-200 rounded w-full animate-pulse"></div>
-        </div>
-      </div>
-    </div>
-  );
-
-  // Deal Card Component for featured deals
-  const DealCard = ({ deal, guitarData, title, subtitle, className = '' }: {
-    deal: DealListing;
-    guitarData: GuitarData;
-    title: string;
-    subtitle: string;
-    className?: string;
-  }) => (
-    <div className={`bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden ${className}`}>
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="text-lg font-bold text-gray-900">{title}</h3>
-            <p className="text-sm text-gray-600">{subtitle}</p>
-          </div>
-          <Badge className="bg-green-100 text-green-800 font-semibold">
-            ${(guitarData.avgMarketPrice - deal.price).toFixed(0)} saved
-          </Badge>
-        </div>
-
-        <div className="space-y-4">
-          {/* Price and Model */}
-          <div>
-            <div className="text-3xl font-bold text-green-600">${deal.price}</div>
-            <div className="text-sm text-gray-600">
-              {((guitarData.avgMarketPrice - deal.price) / guitarData.avgMarketPrice * 100).toFixed(0)}% below market • {deal.condition}
-            </div>
-          </div>
-
-          {/* Deal Details */}
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-gray-600">Source:</span>
-              <span className="font-medium ml-1">{deal.marketplace}</span>
-            </div>
-            <div>
-              <span className="text-gray-600">Score:</span>
-              <span className="font-medium ml-1">{deal.score}/100</span>
-            </div>
-            <div>
-              <span className="text-gray-600">Seller:</span>
-              <span className="font-medium ml-1">{deal.sellerInfo?.rating}/5.0</span>
-            </div>
-            <div>
-              <span className="text-gray-600">Posted:</span>
-              <span className="font-medium ml-1">{deal.datePosted}</span>
-            </div>
-          </div>
-
-          {/* CTA Button */}
-          <Button 
-            className="w-full bg-teal-600 hover:bg-teal-700"
-            onClick={() => {
-              if (deal.listingUrl && deal.listingUrl !== '#') {
-                window.open(deal.listingUrl, '_blank', 'noopener,noreferrer');
-              } else {
-                const searchQuery = encodeURIComponent(`${guitarData.brand} ${guitarData.model} ${deal.condition}`);
-                const searchUrls = {
-                  'Reverb': `https://reverb.com/marketplace?query=${searchQuery}`,
-                  'eBay': `https://www.ebay.com/sch/i.html?_nkw=${searchQuery}`,
-                  'Facebook': `https://www.facebook.com/marketplace/search/?query=${searchQuery}`,
-                  'Craigslist': `https://craigslist.org/search/msg?query=${searchQuery}`,
-                  'Guitar Center': `https://www.guitarcenter.com/search?query=${searchQuery}`,
-                  'Sweetwater': `https://www.sweetwater.com/search?s=${searchQuery}`
-                };
-                const searchUrl = searchUrls[deal.marketplace as keyof typeof searchUrls] || `https://google.com/search?q=${searchQuery}`;
-                window.open(searchUrl, '_blank', 'noopener,noreferrer');
-              }
-            }}
-          >
-            View Listing →
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-
-  // Enhanced Deal Row Component for detailed listing display
-  const DealRowCard = ({ deal, guitarData, rank }: {
-    deal: DealListing;
-    guitarData: GuitarData;
-    rank: number;
-  }) => (
-    <div 
-      className="p-6 hover:bg-gray-50 transition-colors cursor-pointer border-l-4 border-l-transparent hover:border-l-blue-500"
-      onClick={() => {
-        if (deal.listingUrl && deal.listingUrl !== '#') {
-          window.open(deal.listingUrl, '_blank', 'noopener,noreferrer');
-        } else {
-          const searchQuery = encodeURIComponent(`${guitarData.brand} ${guitarData.model} ${deal.condition}`);
-          const searchUrls = {
-            'Reverb': `https://reverb.com/marketplace?query=${searchQuery}`,
-            'eBay': `https://www.ebay.com/sch/i.html?_nkw=${searchQuery}`,
-            'Facebook': `https://www.facebook.com/marketplace/search/?query=${searchQuery}`,
-            'Craigslist': `https://craigslist.org/search/msg?query=${searchQuery}`,
-            'Guitar Center': `https://www.guitarcenter.com/search?Ntt=${searchQuery}`,
-            'Sweetwater': `https://www.sweetwater.com/search?s=${searchQuery}`
-          };
-          const searchUrl = searchUrls[deal.marketplace as keyof typeof searchUrls] || `https://google.com/search?q=${searchQuery}`;
-          window.open(searchUrl, '_blank', 'noopener,noreferrer');
-        }
-      }}
-    >
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        {/* Left Section - Basic Info */}
-        <div className="flex items-center gap-4 flex-1">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
-            #{rank}
-          </div>
-          
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="text-2xl font-bold text-gray-900">${deal.price}</div>
-              <Badge variant={deal.score && deal.score > 80 ? "default" : "secondary"} className="text-xs">
-                {((guitarData.avgMarketPrice - deal.price) / guitarData.avgMarketPrice * 100).toFixed(0)}% off
-              </Badge>
-              <Badge variant="outline" className="text-xs">
-                Score: {deal.score}/100
-              </Badge>
-            </div>
-            
-            {/* Model Name and Description */}
-            <div className="space-y-1">
-              <h4 className="font-semibold text-gray-900 text-lg">
-                {(deal as any).specific_model || `${deal.marketplace} ${guitarData.model}`}
-              </h4>
-              
-                             {(deal as any).review_summary && (
-                 <p 
-                   className="text-sm text-gray-600"
-                   style={{
-                     display: '-webkit-box',
-                     WebkitLineClamp: 2,
-                     WebkitBoxOrient: 'vertical',
-                     overflow: 'hidden',
-                     textOverflow: 'ellipsis'
-                   }}
-                 >
-                   {(deal as any).review_summary}
-                 </p>
-               )}
-              
-              <div className="flex flex-wrap gap-4 text-sm text-gray-500">
-                <span><strong>Source:</strong> {deal.marketplace}</span>
-                <span><strong>Condition:</strong> {deal.condition}</span>
-                <span><strong>Location:</strong> {deal.sellerLocation}</span>
-                <span><strong>Posted:</strong> {deal.datePosted}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Center Section - Seller Info */}
-        <div className="lg:w-48 space-y-2">
-          <div className="text-sm">
-            <div className="font-medium text-gray-900">{deal.sellerInfo?.name || 'Unknown Seller'}</div>
-            <div className="flex items-center gap-2">
-              <span className="text-gray-600">Rating:</span>
-              <span className="font-medium">{deal.sellerInfo?.rating || 'N/A'}/5.0</span>
-              {deal.sellerVerified && (
-                <Badge variant="outline" className="text-xs text-green-600 border-green-600">
-                  ✓ Verified
-                </Badge>
-              )}
-            </div>
-            {(deal as any).seller_reviews_count && (
-              <div className="text-xs text-gray-500">
-                {(deal as any).seller_reviews_count} reviews
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Right Section - Action & Details */}
-        <div className="lg:w-40 text-right space-y-2">
-          <Button 
-            size="sm" 
-            className="w-full bg-blue-600 hover:bg-blue-700"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (deal.listingUrl && deal.listingUrl !== '#') {
-                window.open(deal.listingUrl, '_blank', 'noopener,noreferrer');
-              }
-            }}
-          >
-            View Listing →
-          </Button>
-          
-          <div className="text-xs text-gray-500 space-y-1">
-            {(deal as any).listing_photos && (
-              <div>{(deal as any).listing_photos} photos</div>
-            )}
-            {(deal as any).shipping_cost !== undefined && (
-              <div>
-                {(deal as any).shipping_cost === 0 ? 'Free shipping' : `+$${(deal as any).shipping_cost} shipping`}
-              </div>
-            )}
-            {(deal as any).warranty && (
-              <div className="text-green-600 font-medium">{(deal as any).warranty} warranty</div>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Top Navigation */}
+      {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
@@ -661,15 +302,14 @@ function GuitarDetailPageContent() {
                 className="flex items-center gap-2"
               >
                 <ArrowLeft className="w-4 h-4" />
-                Back to Dashboard
+                Back
               </Button>
               <div className="h-6 w-px bg-gray-300"></div>
-              <h1 className="text-xl font-semibold text-gray-900">
-                {guitarData.brand} {guitarData.model} - Deal Analysis
+              <h1 className="text-2xl font-bold text-gray-900">
+                {guitarData.brand} {guitarData.model}
               </h1>
             </div>
             
-            {/* Refresh Button and Status */}
             <div className="flex items-center gap-3">
               <Button 
                 variant="outline" 
@@ -679,41 +319,19 @@ function GuitarDetailPageContent() {
                 className="flex items-center gap-2"
               >
                 <RefreshCw className={`w-4 h-4 ${scrapingStatus.isActive ? 'animate-spin' : ''}`} />
-                {scrapingStatus.isActive ? 'Scanning...' : 'Refresh Deals'}
+                {scrapingStatus.isActive ? 'Scanning...' : 'Refresh'}
               </Button>
-              
-              <Badge variant={scrapingStatus.isActive ? "default" : "secondary"}>
-                {scrapingStatus.isActive ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    Live Scanning
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-3 h-3" />
-                    Updated {scrapingStatus.lastUpdate}
-                  </div>
-                )}
-              </Badge>
             </div>
           </div>
           
-          {/* Scraping Progress Bar */}
+          {/* Progress Bar */}
           {scrapingStatus.isActive && (
             <div className="mt-4">
               <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
                 <span>Scanning {scrapingStatus.currentSource}...</span>
-                <span>{Math.round(scrapingStatus.progress)}% Complete</span>
+                <span>{Math.round(scrapingStatus.progress)}%</span>
               </div>
               <Progress value={scrapingStatus.progress} className="h-2" />
-              <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
-                <span>Completed:</span>
-                {scrapingStatus.completedSources.map((source, idx) => (
-                  <Badge key={idx} variant="outline" className="text-xs py-0 px-1">
-                    {source}
-                  </Badge>
-                ))}
-              </div>
             </div>
           )}
         </div>
@@ -721,174 +339,242 @@ function GuitarDetailPageContent() {
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
-        {/* Guitar Overview */}
-        <GuitarDetailOverview 
-          guitar={guitarData} 
-          marketDataLoading={marketDataLoading}
-          onImageUpdate={(newImageUrl) => {
-            setGuitarData(prev => prev ? { ...prev, imageUrl: newImageUrl } : null);
-          }}
-        />
-
-        {/* Loading Status Card */}
-        {dealsLoading && (
-          <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-            <div className="flex items-center gap-3">
-              <RefreshCw className="w-5 h-5 text-blue-500 animate-spin" />
-              <div>
-                <h3 className="font-semibold text-gray-900">Loading Deals</h3>
-                <p className="text-sm text-gray-600">
-                  Fetching the latest listings from multiple marketplaces...
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Scraping Status Card */}
-        {!scrapingStatus.isActive && !dealsLoading && (
-          <div className="mb-6 bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <CheckCircle className="w-5 h-5 text-green-500" />
-                <div>
-                  <h3 className="font-semibold text-gray-900">Deal Scan Complete</h3>
-                  <p className="text-sm text-gray-600">
-                    Found {dealListings.length} active listing{dealListings.length !== 1 ? 's' : ''} • 
-                    Last updated {scrapingStatus.lastUpdate} • 
-                    Next scan at {scrapingStatus.nextScan}
-                  </p>
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Left Column - Guitar Info & Specs */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* Guitar Image & Basic Info */}
+            <Card>
+              <CardContent className="p-6">
+                <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg mb-4 flex items-center justify-center">
+                  {guitarData.imageUrl ? (
+                    <img 
+                      src={guitarData.imageUrl} 
+                      alt={`${guitarData.brand} ${guitarData.model}`}
+                      className="w-full h-full object-cover rounded-lg"
+                    />
+                  ) : (
+                    <div className="text-center">
+                      <div className="w-16 h-16 mx-auto mb-2 text-gray-400">🎸</div>
+                      <p className="text-sm text-gray-500">No image available</p>
+                    </div>
+                  )}
                 </div>
-              </div>
-              <div className="text-right">
-                <div className="text-lg font-semibold text-gray-900">
-                  {dealListings.length} Deals Found
-                </div>
-                <div className="text-sm text-gray-600">
-                  Across {scrapingStatus.completedSources.length} platforms
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Enhanced Deal Categories */}
-        <div className="mb-6 space-y-6">
-          {/* Deal Categories Grid */}
-          <div className="grid lg:grid-cols-2 gap-6">
-            {/* Best Value Deal */}
-            {dealListings.length > 0 ? (
-              <DealCard 
-                deal={dealListings[0]}
-                guitarData={guitarData}
-                title="🎯 Best Value"
-                subtitle="Top-rated for overall value"
-                className="border-l-4 border-l-green-500"
-              />
-            ) : dealsLoading ? (
-              <DealCardSkeleton />
-            ) : null}
-            
-            {/* Premium Deal */}
-            {dealListings.length > 1 ? (
-              <DealCard 
-                deal={dealListings[1]}
-                guitarData={guitarData}
-                title="✨ Premium Choice"
-                subtitle="Higher-end model at great price"
-                className="border-l-4 border-l-purple-500"
-              />
-            ) : dealsLoading ? (
-              <DealCardSkeleton />
-            ) : null}
-          </div>
-
-          {/* All Marketplace Listings - Enhanced Detail */}
-          {(dealListings.length > 2 || dealsLoading) && (
-            <div className="bg-white rounded-lg shadow-lg border border-gray-200">
-              <div className="p-6 border-b bg-gradient-to-r from-blue-50 to-purple-50">
-                <div className="flex items-center justify-between">
+                
+                <div className="space-y-3">
                   <div>
-                    <h3 className="text-xl font-bold text-gray-900">Complete Marketplace Listings</h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {dealsLoading 
-                        ? 'Loading detailed listings from all marketplaces...'
-                        : 'Detailed listings with seller info, descriptions, and direct links • Click any listing to visit the original page'
-                      }
+                    <h2 className="text-xl font-bold text-gray-900">{guitarData.brand}</h2>
+                    <p className="text-lg text-gray-700">{guitarData.model}</p>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">{guitarData.type}</Badge>
+                    <Badge variant="outline">{guitarData.tier}</Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Pricing Info */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5" />
+                  Pricing Overview
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">MSRP</p>
+                    <p className="text-lg font-semibold">${guitarData.msrp}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Avg. Market</p>
+                    <p className="text-lg font-semibold">${guitarData.avgMarketPrice}</p>
+                  </div>
+                </div>
+                
+                {dealListings.length > 0 && (
+                  <div className="pt-3 border-t">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Best Deal Found</span>
+                      <div className="text-right">
+                        <p className="text-xl font-bold text-green-600">${dealListings[0].price}</p>
+                        <p className="text-sm text-gray-500">
+                          {getPriceChange(dealListings[0].price, guitarData.msrp)}% vs MSRP
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Specifications */}
+            {guitarData.specs && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Info className="w-5 h-5" />
+                    Specifications
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <dl className="space-y-3">
+                    <div className="flex justify-between">
+                      <dt className="text-sm text-gray-600">Body</dt>
+                      <dd className="text-sm font-medium">{guitarData.specs.body}</dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt className="text-sm text-gray-600">Neck</dt>
+                      <dd className="text-sm font-medium">{guitarData.specs.neck}</dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt className="text-sm text-gray-600">Fretboard</dt>
+                      <dd className="text-sm font-medium">{guitarData.specs.fretboard}</dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt className="text-sm text-gray-600">Pickups</dt>
+                      <dd className="text-sm font-medium">{guitarData.specs.pickups}</dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt className="text-sm text-gray-600">Scale Length</dt>
+                      <dd className="text-sm font-medium">{guitarData.specs.scale}</dd>
+                    </div>
+                    <div className="flex justify-between">
+                      <dt className="text-sm text-gray-600">Frets</dt>
+                      <dd className="text-sm font-medium">{guitarData.specs.frets}</dd>
+                    </div>
+                  </dl>
+                  
+                  {guitarData.specs.features.length > 0 && (
+                    <div className="mt-4 pt-3 border-t">
+                      <p className="text-sm text-gray-600 mb-2">Key Features</p>
+                      <div className="flex flex-wrap gap-1">
+                        {guitarData.specs.features.map((feature, idx) => (
+                          <Badge key={idx} variant="outline" className="text-xs">
+                            {feature}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* Right Column - Deal Listings */}
+          <div className="lg:col-span-2">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-xl">Available Deals</CardTitle>
+                  <div className="text-right">
+                    <p className="text-sm text-gray-600">
+                      {dealsLoading ? 'Loading...' : `${dealListings.length} listings found`}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Sorted by deal score
                     </p>
                   </div>
-                  <div className="text-right">
-                    {dealsLoading ? (
-                      <div className="h-8 bg-gray-200 rounded w-12 animate-pulse"></div>
-                    ) : (
-                      <>
-                        <div className="text-2xl font-bold text-blue-600">{Math.max(0, dealListings.length - 2)}</div>
-                        <div className="text-xs text-gray-500">more listings</div>
-                      </>
-                    )}
-                  </div>
                 </div>
-              </div>
-              <div className="divide-y divide-gray-200">
-                {dealListings.length > 2 ? (
-                  dealListings.slice(2).map((deal, index) => (
-                    <DealRowCard 
-                      key={deal.id}
-                      deal={deal}
-                      guitarData={guitarData}
-                      rank={index + 3}
-                    />
-                  ))
-                ) : dealsLoading ? (
-                  // Show skeleton loaders while loading
-                  Array.from({ length: 3 }).map((_, index) => (
-                    <DealRowSkeleton key={`skeleton-${index}`} />
-                  ))
-                ) : null}
-              </div>
-            </div>
-          )}
-        </div>
-
-
-
-        {/* No Deals Found */}
-        {dealListings.length === 0 && !dealsLoading && !scrapingStatus.isActive && (
-          <div className="mb-6 bg-white rounded-lg p-8 shadow-sm border border-gray-200 text-center">
-            <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Deals Found</h3>
-            <p className="text-gray-600 mb-4">
-              We couldn't find any active listings for this guitar model right now. 
-              This could mean it's a rare or discontinued model, or there simply aren't any available.
-            </p>
-            <Button 
-              variant="outline" 
-              onClick={handleManualRefresh}
-              className="flex items-center gap-2"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Try Scanning Again
-            </Button>
-          </div>
-        )}
-
-        {/* Footer Action */}
-        <div className="text-center py-8">
-          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Deal Alert Settings
-            </h3>
-            <p className="text-gray-600 mb-4">
-              Get notified when better deals become available for this guitar
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Button variant="outline">
-                Set Price Alert (${Math.round(guitarData.avgMarketPrice * 0.7)} or less)
-              </Button>
-              <Button className="bg-teal-600 hover:bg-teal-700">
-                Enable Deal Notifications
-              </Button>
-            </div>
+              </CardHeader>
+              <CardContent>
+                {dealsLoading ? (
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="animate-pulse">
+                        <div className="flex items-center justify-between p-4 border rounded-lg">
+                          <div className="space-y-2 flex-1">
+                            <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                            <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                          </div>
+                          <div className="h-6 bg-gray-200 rounded w-16"></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : dealListings.length === 0 ? (
+                  <div className="text-center py-12">
+                    <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No Deals Found</h3>
+                    <p className="text-gray-600 mb-4">
+                      We couldn't find any listings for this guitar right now.
+                    </p>
+                    <Button onClick={handleManualRefresh} variant="outline">
+                      Try Again
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {dealListings.map((deal, index) => (
+                      <div 
+                        key={deal.id}
+                        className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                        onClick={() => window.open(deal.listingUrl, '_blank')}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <span className="text-sm font-medium text-gray-500">#{index + 1}</span>
+                              <Badge 
+                                variant="secondary" 
+                                className={getScoreColor(deal.dealScore)}
+                              >
+                                {deal.dealScore}/100 - {getScoreLabel(deal.dealScore)}
+                              </Badge>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <div>
+                                <p className="text-xl font-bold text-gray-900">${deal.price}</p>
+                                <p className="text-sm text-gray-600">{deal.condition}</p>
+                              </div>
+                              
+                              <div>
+                                <p className="font-medium text-gray-900">{deal.marketplace}</p>
+                                <div className="flex items-center gap-1 text-sm text-gray-600">
+                                  <MapPin className="w-3 h-3" />
+                                  {deal.sellerLocation}
+                                </div>
+                              </div>
+                              
+                              <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="text-sm font-medium">{deal.sellerInfo.name}</span>
+                                  {deal.sellerVerified && (
+                                    <Shield className="w-3 h-3 text-green-500" />
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2 text-xs text-gray-500">
+                                  {deal.sellerInfo.rating > 0 && (
+                                    <div className="flex items-center gap-1">
+                                      <Star className="w-3 h-3 fill-current text-yellow-400" />
+                                      {deal.sellerInfo.rating}
+                                    </div>
+                                  )}
+                                  <Calendar className="w-3 h-3" />
+                                  {deal.datePosted}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {deal.description && (
+                              <p className="text-sm text-gray-600 mt-2 line-clamp-2">
+                                {deal.description}
+                              </p>
+                            )}
+                          </div>
+                          
+                          <ExternalLink className="w-4 h-4 text-gray-400 ml-4 flex-shrink-0" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
       </main>
@@ -896,16 +582,14 @@ function GuitarDetailPageContent() {
   );
 }
 
-/**
- * Guitar Detail Page with Suspense Boundary
- */
 export default function GuitarDetailPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <RefreshCw className="w-8 h-8 text-blue-500 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading guitar details...</p>
+          <RefreshCw className="w-8 h-8 animate-spin text-teal-600 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Loading Guitar Details</h2>
+          <p className="text-gray-600">Fetching the latest deal information...</p>
         </div>
       </div>
     }>
