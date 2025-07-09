@@ -61,20 +61,21 @@ logger = logging.getLogger(__name__)
 
 # Import guitar specs API for fetching detailed specifications and images.
 try:
-    # Temporarily disabled for debugging
-    # from guitar_specs_api import get_guitar_specs_sync
-    GUITAR_SPECS_AVAILABLE = False
-    logger.info("Guitar specs API temporarily disabled for debugging.")
+    from guitar_specs_api import get_guitar_specs_sync
+    GUITAR_SPECS_AVAILABLE = True
+    logger.info("Successfully imported guitar_specs_api. Detailed specs and images are available.")
 except ImportError as e:
     GUITAR_SPECS_AVAILABLE = False
     logger.warning(f"Could not import guitar_specs_api: {e}. Detailed specs and images will be unavailable.")
 
 # Import Reverb API for fetching real-time marketplace data.
 try:
-    # Temporarily disabled for debugging  
-    # from reverb_api import search_reverb_guitars_sync
-    REVERB_API_AVAILABLE = False
-    logger.info("Reverb API temporarily disabled for debugging.")
+    # We use a synchronous wrapper (`search_reverb_guitars_sync`) to call the async Reverb API
+    # from within FastAPI's synchronous-by-default endpoint functions. This is crucial
+    # to avoid "event loop already running" errors.
+    from reverb_api import search_reverb_guitars_sync
+    REVERB_API_AVAILABLE = True
+    logger.info("Successfully imported reverb_api. Real-time Reverb listings are available.")
 except ImportError as e:
     REVERB_API_AVAILABLE = False
     logger.warning(f"Could not import reverb_api: {e}. Real-time Reverb listings will be unavailable.")
@@ -338,8 +339,6 @@ async def search_for_guitar_deals(brand: str, model: str):
     listings = []
     if REVERB_API_AVAILABLE:
         try:
-            # Import only when needed for debugging
-            from reverb_api import search_reverb_guitars_sync
             logger.info(f"Calling Reverb API for '{brand} {model}'...")
             raw_listings = search_reverb_guitars_sync(brand, model)
             if raw_listings:
@@ -358,8 +357,6 @@ async def search_for_guitar_deals(brand: str, model: str):
     guitar_specs = None
     if GUITAR_SPECS_AVAILABLE:
         try:
-            # Import only when needed for debugging
-            from guitar_specs_api import get_guitar_specs_sync
             logger.info(f"Calling Guitar Specs API for '{brand} {model}'...")
             guitar_specs = get_guitar_specs_sync(brand, model)
             if guitar_specs:
