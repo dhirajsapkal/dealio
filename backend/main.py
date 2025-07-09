@@ -75,105 +75,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Guitar brands database (100+ brands)
-GUITAR_BRANDS = [
-    "Fender", "Gibson", "Epiphone", "Ibanez", "Yamaha", "Taylor", "Martin", "PRS", "Schecter", "ESP",
-    "Jackson", "Charvel", "Gretsch", "Rickenbacker", "Guild", "Washburn", "Dean", "BC Rich", "Kramer", "Steinberger",
-    "Parker", "Music Man", "G&L", "Suhr", "Anderson", "Collings", "Santa Cruz", "Breedlove", "Seagull", "Art & Lutherie",
-    "Simon & Patrick", "Norman", "Godin", "Lag", "Takamine", "Ovation", "Alvarez", "Sigma", "Recording King", "Blueridge",
-    "Eastman", "Loar", "Kentucky", "Weber", "Deering", "Gold Tone", "Washburn", "Oscar Schmidt", "Rogue", "Luna",
-    "Daisy Rock", "First Act", "Squier", "Epiphone", "Ltd", "Jackson", "Charvel", "EVH", "Sterling", "OLP",
-    "Agile", "Douglas", "SX", "Harley Benton", "Monoprice", "Indio", "Rondo", "Xaviere", "Guitarfetish", "Saga",
-    "Johnson", "Silvertone", "Harmony", "Kay", "Teisco", "Airline", "Supro", "Danelectro", "National", "Dobro",
-    "Resonator", "Weissenborn", "Kala", "Cordoba", "Alhambra", "Ramirez", "Conde", "Hanika", "Kremona", "La Patrie",
-    "Admira", "Valencia", "Raimundo", "Manuel Rodriguez", "Jose Ramirez", "Francisco Esteve", "Antonio Sanchez"
-]
-
-# Guitar model database with specifications and market data
-GUITAR_MODEL_DATABASE = {
-    "Epiphone": {
-        "Les Paul": {
-            "Studio": {"msrp": 449, "features": ["mahogany body", "maple cap", "alnico pickups"], "rating": 4.2, "tier": "entry"},
-            "Standard": {"msrp": 599, "features": ["mahogany body", "maple cap", "alnico classic pro pickups"], "rating": 4.4, "tier": "mid"},
-            "Standard 50s": {"msrp": 649, "features": ["mahogany body", "maple cap", "probuckers", "50s neck"], "rating": 4.5, "tier": "mid"},
-            "Standard 60s": {"msrp": 649, "features": ["mahogany body", "maple cap", "probuckers", "60s neck"], "rating": 4.5, "tier": "mid"},
-            "Custom": {"msrp": 799, "features": ["mahogany body", "maple cap", "probuckers", "binding", "block inlays"], "rating": 4.6, "tier": "mid-high"},
-            "Prophecy": {"msrp": 899, "features": ["mahogany body", "fishman fluence pickups", "locking tuners", "modern neck"], "rating": 4.7, "tier": "high"},
-            "Modern Figured": {"msrp": 699, "features": ["mahogany body", "figured maple cap", "probuckers"], "rating": 4.4, "tier": "mid"},
-            "Plus Top Pro": {"msrp": 749, "features": ["mahogany body", "aaa maple cap", "coil-tap", "locking tuners"], "rating": 4.5, "tier": "mid-high"}
-        }
-    },
-    "Fender": {
-        "Stratocaster": {
-            "Player": {"msrp": 899, "features": ["alder body", "player series pickups", "modern c neck"], "rating": 4.5, "tier": "mid"},
-            "Player Plus": {"msrp": 1149, "features": ["alder body", "player plus noiseless pickups", "12 radius"], "rating": 4.6, "tier": "mid-high"},
-            "Professional": {"msrp": 1849, "features": ["alder body", "v-mod pickups", "modern deep c neck"], "rating": 4.8, "tier": "high"},
-            "American Ultra": {"msrp": 2199, "features": ["alder body", "ultra noiseless pickups", "compound radius"], "rating": 4.9, "tier": "premium"}
-        },
-        "Telecaster": {
-            "Player": {"msrp": 899, "features": ["alder body", "player series pickups", "modern c neck"], "rating": 4.5, "tier": "mid"},
-            "Professional": {"msrp": 1849, "features": ["alder body", "v-mod pickups", "modern deep c neck"], "rating": 4.8, "tier": "high"},
-            "American Ultra": {"msrp": 2199, "features": ["alder body", "ultra noiseless pickups", "compound radius"], "rating": 4.9, "tier": "premium"}
-        }
-    },
-    "Gibson": {
-        "Les Paul": {
-            "Studio": {"msrp": 1499, "features": ["mahogany body", "maple cap", "490r/498t pickups"], "rating": 4.6, "tier": "mid-high"},
-            "Standard": {"msrp": 2499, "features": ["mahogany body", "maple cap", "burstbucker pro pickups"], "rating": 4.8, "tier": "high"},
-            "Traditional": {"msrp": 2299, "features": ["mahogany body", "maple cap", "burstbucker pickups"], "rating": 4.7, "tier": "high"}
-        }
-    },
-    "Schecter": {
-        "Solo": {
-            "Solo 2 Custom": {"msrp": 1199, "features": ["mahogany body", "quilted maple cap", "seymour duncan pickups", "locking tuners", "coil tap"], "rating": 4.7, "tier": "high"},
-            "Solo 6": {"msrp": 899, "features": ["mahogany body", "duncan designed pickups", "tune-o-matic bridge"], "rating": 4.4, "tier": "mid"},
-            "Solo 6 Stealth": {"msrp": 949, "features": ["mahogany body", "active pickups", "black hardware", "ebony fretboard"], "rating": 4.5, "tier": "mid-high"}
-        },
-        "Hellraiser": {
-            "Hellraiser C-1": {"msrp": 1049, "features": ["mahogany body", "quilted maple cap", "emg 81/85 pickups", "abalone binding"], "rating": 4.6, "tier": "mid-high"},
-            "Hellraiser C-7": {"msrp": 1149, "features": ["7-string", "mahogany body", "emg 707 pickups", "24 frets"], "rating": 4.5, "tier": "mid-high"},
-            "Hellraiser Hybrid C-1": {"msrp": 1199, "features": ["mahogany body", "emg fishman fluence pickups", "coil tap"], "rating": 4.7, "tier": "high"},
-            "Hellraiser Extreme": {"msrp": 899, "features": ["basswood body", "emg hz pickups", "floyd rose"], "rating": 4.3, "tier": "mid"}
-        },
-        "Omen": {
-            "Omen 6": {"msrp": 449, "features": ["basswood body", "diamond series pickups", "rosewood fretboard"], "rating": 4.1, "tier": "entry"},
-            "Omen 7": {"msrp": 499, "features": ["7-string", "basswood body", "diamond series pickups"], "rating": 4.0, "tier": "entry"},
-            "Omen Elite": {"msrp": 649, "features": ["mahogany body", "quilted maple veneer", "diamond plus pickups"], "rating": 4.3, "tier": "mid"},
-            "Omen Extreme": {"msrp": 549, "features": ["basswood body", "floyd rose special", "diamond series pickups"], "rating": 4.2, "tier": "entry"}
-        },
-        "C Series": {
-            "C-1 Classic": {"msrp": 799, "features": ["mahogany body", "seymour duncan jb/59 pickups", "tune-o-matic bridge"], "rating": 4.4, "tier": "mid"},
-            "C-1 Platinum": {"msrp": 949, "features": ["mahogany body", "seymour duncan full shred pickups", "grover tuners"], "rating": 4.5, "tier": "mid-high"},
-            "C-1 SLS Elite": {"msrp": 1399, "features": ["swamp ash body", "fishman fluence pickups", "hipshot bridge"], "rating": 4.8, "tier": "high"},
-            "C-7 Multiscale": {"msrp": 1299, "features": ["7-string", "multiscale fretboard", "fishman fluence pickups"], "rating": 4.7, "tier": "high"}
-        },
-        "Damien": {
-            "Damien 6": {"msrp": 399, "features": ["basswood body", "diamond series pickups", "licensed floyd rose"], "rating": 3.9, "tier": "entry"},
-            "Damien 7": {"msrp": 449, "features": ["7-string", "basswood body", "diamond series pickups"], "rating": 3.8, "tier": "entry"},
-            "Damien Elite": {"msrp": 549, "features": ["mahogany body", "diamond plus pickups", "black cherry finish"], "rating": 4.1, "tier": "entry"},
-            "Damien Platinum": {"msrp": 699, "features": ["mahogany body", "seymour duncan pickups", "grover tuners"], "rating": 4.3, "tier": "mid"}
-        },
-        "Banshee": {
-            "Banshee 6": {"msrp": 949, "features": ["mahogany body", "seymour duncan pickups", "hipshot bridge"], "rating": 4.5, "tier": "mid-high"},
-            "Banshee 7": {"msrp": 1049, "features": ["7-string", "mahogany body", "seymour duncan nazgul/sentient"], "rating": 4.4, "tier": "mid-high"},
-            "Banshee Elite": {"msrp": 1199, "features": ["swamp ash body", "fishman fluence pickups", "luminlay inlays"], "rating": 4.6, "tier": "high"},
-            "Banshee Mach": {"msrp": 1399, "features": ["basswood body", "bare knuckle pickups", "evertune bridge"], "rating": 4.7, "tier": "high"}
-        },
-        "Nick Johnston": {
-            "Traditional HSS": {"msrp": 1299, "features": ["alder body", "seymour duncan nick johnston pickups", "vintage tremolo"], "rating": 4.8, "tier": "high"},
-            "Atomic Coral": {"msrp": 1399, "features": ["alder body", "custom finish", "seymour duncan pickups", "roasted maple neck"], "rating": 4.9, "tier": "high"},
-            "Sunset Burst": {"msrp": 1349, "features": ["alder body", "flame maple cap", "seymour duncan pickups"], "rating": 4.8, "tier": "high"}
-        },
-        "Sun Valley": {
-            "Super Shredder": {"msrp": 2199, "features": ["mahogany body", "flame maple cap", "bareknuckle pickups", "hipshot bridge"], "rating": 4.9, "tier": "premium"},
-            "Super Shredder FR": {"msrp": 2299, "features": ["mahogany body", "floyd rose original", "bareknuckle pickups"], "rating": 4.8, "tier": "premium"}
-        },
-        "Reaper": {
-            "Reaper 6": {"msrp": 599, "features": ["basswood body", "diamond plus pickups", "string-thru bridge"], "rating": 4.2, "tier": "mid"},
-            "Reaper 7": {"msrp": 649, "features": ["7-string", "basswood body", "diamond plus pickups"], "rating": 4.1, "tier": "mid"}
-        }
-    }
-}
+# All guitar data now comes from guitar_database.py - NO MORE HARDCODED DATA!
 
 SUPPORTED_MARKETPLACES = ["Reverb", "Facebook", "eBay", "Craigslist", "Guitar Center", "Sweetwater"]
 
@@ -368,22 +270,19 @@ def calculate_deal_score(listing: Dict, brand: str, model: str) -> int:
 
 def get_estimated_market_price(brand: str, model: str) -> float:
     """
-    Get estimated market price for a guitar model.
-    
-    Args:
-        brand: Guitar brand
-        model: Guitar model
+    Get estimated market price for a guitar based on brand and model.
     
     Returns:
         Estimated market price
     """
     
-    # Try to get from model database
-    if brand in GUITAR_MODEL_DATABASE and model in GUITAR_MODEL_DATABASE[brand]:
-        # Return average MSRP of variants as market estimate
-        variants = GUITAR_MODEL_DATABASE[brand][model]
-        msrps = [variant['msrp'] for variant in variants.values()]
-        return sum(msrps) / len(msrps)
+    # Try to get from the new guitar database
+    try:
+        guitar_info = get_guitar_info(brand, model)
+        if guitar_info:
+            return guitar_info.get('msrp', 1000)
+    except:
+        pass
     
     # Default estimates based on brand
     brand_estimates = {
@@ -647,9 +546,13 @@ async def get_system_status():
 @app.get("/guitars")
 async def get_all_guitars():
     """Get all guitar listings - requires specific brand/model search."""
+    # Get first 10 brands from the guitar database
+    all_brands = get_all_brands()
+    sample_brands = sorted(all_brands)[:10]
+    
     return {
         "message": "Please specify a brand and model to search for guitar listings. Use /guitars/{brand}/{model}",
-        "available_brands": sorted(GUITAR_BRANDS[:10]),  # Show first 10 brands as examples
+        "available_brands": sample_brands,
         "example_searches": [
             "/guitars/Fender/Stratocaster",
             "/guitars/Gibson/Les Paul", 
@@ -916,8 +819,9 @@ def categorize_deals(listings, brand, model):
     if not listings:
         return {}
     
-    # Get model database info
-    model_info = GUITAR_MODEL_DATABASE.get(brand, {}).get(model, {})
+    # Get model info from the new guitar database
+    guitar_info = get_guitar_info(brand, model)
+    model_info = guitar_info or {}
     
     # Sort by different criteria
     by_price = sorted(listings, key=lambda x: x["price"])
@@ -1020,19 +924,21 @@ def find_premium_deal(listings, model_info):
 
 def get_model_variants(brand, model):
     """Get available variants for a guitar model."""
-    model_info = GUITAR_MODEL_DATABASE.get(brand, {}).get(model, {})
-    variants = []
+    # Use the new guitar database to get guitar information
+    try:
+        guitar_info = get_guitar_info(brand, model)
+        if guitar_info:
+            return [{
+                "name": model,
+                "msrp": guitar_info.get("msrp", 0),
+                "tier": guitar_info.get("tier", "mid"),
+                "features": guitar_info.get("features", [])
+            }]
+    except:
+        pass
     
-    for variant_name, variant_data in model_info.items():
-        variants.append({
-            "name": variant_name,
-            "msrp": variant_data.get("msrp", 0),
-            "tier": variant_data.get("tier", "mid"),
-            "rating": variant_data.get("rating", 4.0),
-            "features": variant_data.get("features", [])
-        })
-    
-    return sorted(variants, key=lambda x: x["msrp"])
+    # Return empty if no info found
+    return []
 
 @app.get("/guitars/{brand}/{model}/dealscore")
 async def get_deal_scores(brand: str, model: str):
