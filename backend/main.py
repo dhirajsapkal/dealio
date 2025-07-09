@@ -14,17 +14,21 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from typing import List, Dict, Optional
 
-# Import real scrapers
-from scrapers import (
-    scrape_reverb, 
-    scrape_facebook, 
-    scrape_craigslist, 
-    scrape_ebay, 
-    scrape_guitar_center, 
-    scrape_sweetwater,
-    SCRAPERS,
-    SCRAPER_PRIORITY
-)
+# Temporarily comment out scrapers for deployment
+# from scrapers import (
+#     scrape_reverb, 
+#     scrape_facebook, 
+#     scrape_craigslist, 
+#     scrape_ebay, 
+#     scrape_guitar_center, 
+#     scrape_sweetwater,
+#     SCRAPERS,
+#     SCRAPER_PRIORITY
+# )
+
+# Fallback scraper configuration for demo
+SCRAPERS = {}
+SCRAPER_PRIORITY = ["Reverb", "eBay", "Facebook", "Guitar Center", "Craigslist", "Sweetwater"]
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
