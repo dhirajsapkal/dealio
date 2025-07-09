@@ -39,19 +39,7 @@ interface TrackedGuitar {
   createdAt: string;
 }
 
-// Fallback guitar brands list (matches backend database)
-const FALLBACK_GUITAR_BRANDS = [
-  "Fender", "Gibson", "Epiphone", "Ibanez", "Yamaha", "Taylor", "Martin", "PRS", "Schecter", "ESP",
-  "Jackson", "Charvel", "Gretsch", "Rickenbacker", "Guild", "Washburn", "Dean", "BC Rich", "Kramer", "Steinberger",
-  "Parker", "Music Man", "G&L", "Suhr", "Anderson", "Collings", "Santa Cruz", "Breedlove", "Seagull", "Art & Lutherie",
-  "Simon & Patrick", "Norman", "Godin", "Lag", "Takamine", "Ovation", "Alvarez", "Sigma", "Recording King", "Blueridge",
-  "Eastman", "Loar", "Kentucky", "Weber", "Deering", "Gold Tone", "Washburn", "Oscar Schmidt", "Rogue", "Luna",
-  "Daisy Rock", "First Act", "Squier", "Epiphone", "Ltd", "Jackson", "Charvel", "EVH", "Sterling", "OLP",
-  "Agile", "Douglas", "SX", "Harley Benton", "Monoprice", "Indio", "Rondo", "Xaviere", "Guitarfetish", "Saga",
-  "Johnson", "Silvertone", "Harmony", "Kay", "Teisco", "Airline", "Supro", "Danelectro", "National", "Dobro",
-  "Resonator", "Weissenborn", "Kala", "Cordoba", "Alhambra", "Ramirez", "Conde", "Hanika", "Kremona", "La Patrie",
-  "Admira", "Valencia", "Raimundo", "Manuel Rodriguez", "Jose Ramirez", "Francisco Esteve", "Antonio Sanchez"
-].sort();
+// No fallback brands - always use API data
 
 export default function Dashboard() {
   const router = useRouter();
@@ -95,6 +83,9 @@ export default function Dashboard() {
     const loadBrands = async () => {
       try {
         const response = await fetch(`${getApiUrl()}/guitars/brands`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const data = await response.json();
         console.log('🎸 Loaded brands from API:', data.brands);
         console.log('🎸 Looking for Schecter:', data.brands.filter((b: string) => b.toLowerCase().includes('sch')));
@@ -105,13 +96,8 @@ export default function Dashboard() {
         console.log('🎸 Brand options set:', options.filter((opt: any) => opt.label.toLowerCase().includes('sch')));
         setBrandOptions(options);
       } catch (error) {
-        console.error('Error loading brands from API, using fallback:', error);
-        // Use fallback brands when API is unavailable
-        const fallbackOptions = FALLBACK_GUITAR_BRANDS.map((brand: string) => ({
-          value: brand,
-          label: brand
-        }));
-        setBrandOptions(fallbackOptions);
+        console.error('Error loading brands from API:', error);
+        setBrandOptions([]); // Show empty instead of fallback
       }
     };
     loadBrands();
@@ -322,26 +308,32 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-lg">
               <DialogHeader>
-                <DialogTitle>Track New Guitar</DialogTitle>
+                <DialogTitle className="flex items-center gap-2">
+                  <Guitar className="w-5 h-5 text-teal-600" />
+                  Track New Guitar
+                </DialogTitle>
                 <DialogDescription>
-                  Add a guitar to track deals and price history across online marketplaces.
+                  Find the best deals for your guitar across online marketplaces. We&apos;ll track prices and notify you of great deals.
                 </DialogDescription>
               </DialogHeader>
               
-              <div className="grid gap-4 py-4">
-                {/* Guitar Type */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Guitar Type</label>
-                  <div className="flex space-x-2">
+              <div className="space-y-6 py-4">
+                {/* Step 1: Guitar Type */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-teal-100 text-teal-600 text-sm font-medium flex items-center justify-center">1</div>
+                    <label className="text-sm font-medium">What type of guitar?</label>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 ml-8">
                     {['Electric', 'Acoustic', 'Bass'].map((type) => (
                       <Button
                         key={type}
                         variant={formData.type === type ? 'default' : 'outline'}
                         size="sm"
                         onClick={() => setFormData({ ...formData, type })}
-                        className={formData.type === type ? 'bg-teal-600 hover:bg-teal-700' : ''}
+                        className={formData.type === type ? 'bg-teal-600 hover:bg-teal-700' : 'hover:bg-teal-50 hover:border-teal-200'}
                       >
                         {type}
                       </Button>
@@ -349,53 +341,88 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                {/* Brand */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Brand</label>
-                  <p className="text-xs text-blue-600">Debug: {brandOptions.length} brands loaded, Schecter found: {brandOptions.some(b => b.label === 'Schecter') ? 'YES' : 'NO'}</p>
-                  <Combobox
-                    key={`brand-${brandOptions.length}`}
-                    options={brandOptions}
-                    value={formData.brand}
-                    onValueChange={(value) => setFormData({...formData, brand: value, model: ''})}
-                    placeholder="Search for a brand..."
-                  />
+                {/* Step 2: Brand */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-6 h-6 rounded-full text-sm font-medium flex items-center justify-center ${
+                      formData.type ? 'bg-teal-100 text-teal-600' : 'bg-gray-100 text-gray-400'
+                    }`}>2</div>
+                    <label className="text-sm font-medium">Which brand?</label>
+                  </div>
+                  <div className="ml-8">
+                    {brandOptions.length === 0 ? (
+                      <div className="p-3 bg-amber-50 border border-amber-200 rounded-md">
+                        <p className="text-sm text-amber-700">Loading brands from database...</p>
+                      </div>
+                    ) : (
+                      <Combobox
+                        key={`brand-${brandOptions.length}`}
+                        options={brandOptions}
+                        value={formData.brand}
+                        onValueChange={(value) => setFormData({...formData, brand: value, model: ''})}
+                        placeholder="Type to search brands (e.g., Fender, Gibson, Schecter)..."
+                        disabled={!formData.type}
+                      />
+                    )}
+                    {formData.type && brandOptions.length > 0 && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        {brandOptions.length} brands available • Type to search
+                      </p>
+                    )}
+                  </div>
                 </div>
 
-                {/* Model */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Model Name</label>
-                  <Combobox
-                    options={modelOptions}
-                    value={formData.model}
-                    onValueChange={(value) => setFormData({...formData, model: value})}
-                    placeholder={
-                      !formData.brand 
-                        ? "Select a brand first..." 
-                        : isLoadingModels 
-                          ? "Loading models..." 
-                          : "Search for a model..."
-                    }
-                    disabled={!formData.brand || isLoadingModels}
-                  />
-                  {formData.brand && modelOptions.length === 0 && !isLoadingModels && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      No predefined models found. You can type a custom model name.
-                    </p>
-                  )}
+                {/* Step 3: Model */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-6 h-6 rounded-full text-sm font-medium flex items-center justify-center ${
+                      formData.brand ? 'bg-teal-100 text-teal-600' : 'bg-gray-100 text-gray-400'
+                    }`}>3</div>
+                    <label className="text-sm font-medium">What model?</label>
+                  </div>
+                  <div className="ml-8">
+                    {isLoadingModels ? (
+                      <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                        <p className="text-sm text-blue-700">Loading {formData.brand} models...</p>
+                      </div>
+                    ) : (
+                      <Combobox
+                        options={modelOptions}
+                        value={formData.model}
+                        onValueChange={(value) => setFormData({...formData, model: value})}
+                        placeholder={
+                          !formData.brand 
+                            ? "Select a brand first..." 
+                            : modelOptions.length > 0
+                              ? "Type to search models..."
+                              : "Type any model name..."
+                        }
+                        disabled={!formData.brand || isLoadingModels}
+                      />
+                    )}
+                    {formData.brand && !isLoadingModels && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        {modelOptions.length > 0 
+                          ? `${modelOptions.length} models found • You can also type a custom model name`
+                          : "No predefined models found • Type any model name"
+                        }
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              <DialogFooter>
+              <DialogFooter className="flex gap-2">
                 <Button variant="outline" onClick={() => setIsAddModalOpen(false)}>
                   Cancel
                 </Button>
                 <Button 
                   onClick={handleAddGuitar}
-                  className="bg-teal-600 hover:bg-teal-700"
+                  className="bg-teal-600 hover:bg-teal-700 flex items-center gap-2"
                   disabled={!formData.type || !formData.brand || !formData.model}
                 >
-                  Add Guitar
+                  <Plus className="w-4 h-4" />
+                  Start Tracking
                 </Button>
               </DialogFooter>
             </DialogContent>
