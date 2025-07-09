@@ -355,7 +355,7 @@ export default function Dashboard() {
                     <div className="w-6 h-6 rounded-full bg-teal-100 text-teal-600 text-sm font-medium flex items-center justify-center">1</div>
                     <label className="text-sm font-medium">What type of guitar?</label>
                   </div>
-                  <div className="grid grid-cols-3 gap-2 ml-8">
+                  <div className="grid grid-cols-3 gap-2">
                     {['Electric', 'Acoustic', 'Bass'].map((type) => (
                       <motion.div
                         key={type}
@@ -384,7 +384,7 @@ export default function Dashboard() {
                     }`}>2</div>
                     <label className="text-sm font-medium">Which brand?</label>
                   </div>
-                  <div className="ml-8">
+                  <div className="space-y-1">
                     <div className="min-h-[40px] flex items-center">
                       {brandOptions.length === 0 ? (
                         <div className="p-3 bg-amber-50 border border-amber-200 rounded-md w-full">
@@ -398,10 +398,11 @@ export default function Dashboard() {
                           onValueChange={(value) => setFormData({...formData, brand: value, model: ''})}
                           placeholder="Type to search brands (e.g., Fender, Gibson, Schecter)..."
                           disabled={!formData.type}
+                          className="w-full"
                         />
                       )}
                     </div>
-                    <div className="min-h-[20px] mt-1">
+                    <div className="min-h-[20px]">
                       {formData.type && brandOptions.length > 0 && (
                         <p className="text-xs text-gray-500">
                           {brandOptions.length} brands available • Type to search
@@ -419,7 +420,7 @@ export default function Dashboard() {
                     }`}>3</div>
                     <label className="text-sm font-medium">What model?</label>
                   </div>
-                  <div className="ml-8">
+                  <div className="space-y-1">
                     <div className="min-h-[40px] flex items-center">
                       {isLoadingModels ? (
                         <div className="p-3 bg-blue-50 border border-blue-200 rounded-md w-full">
@@ -438,10 +439,11 @@ export default function Dashboard() {
                                 : "Type any model name..."
                           }
                           disabled={!formData.brand || isLoadingModels}
+                          className="w-full"
                         />
                       )}
                     </div>
-                    <div className="min-h-[20px] mt-1">
+                    <div className="min-h-[20px]">
                       {formData.brand && !isLoadingModels && (
                         <p className="text-xs text-gray-500">
                           {modelOptions.length > 0 

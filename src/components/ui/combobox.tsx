@@ -141,7 +141,7 @@ export function Combobox({
       {isOpen && filteredOptions.length > 0 && (
         <div
           ref={dropdownRef}
-          className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto"
+          className="absolute z-[100] w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto"
         >
           {filteredOptions.map((option, index) => (
             <div
@@ -164,7 +164,7 @@ export function Combobox({
       )}
       
       {isOpen && filteredOptions.length === 0 && inputValue.trim() && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg p-3 text-sm text-gray-500">
+        <div className="absolute z-[100] w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg p-3 text-sm text-gray-500">
           No options found
         </div>
       )}
