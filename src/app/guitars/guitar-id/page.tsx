@@ -259,7 +259,7 @@ function GuitarDetailPageContent() {
               marketplace: listing.source,
               sellerLocation: listing.location || 'Location not specified',
               datePosted: listing.created_at ? new Date(listing.created_at).toLocaleDateString() : 'Recently',
-              listingUrl: listing.listingUrl,
+              listingUrl: listing.listingUrl || listing.url || '#',
               condition: listing.condition || 'Used',
               dealScore: Math.min(100, Math.floor(dealScore)),
               sellerVerified: listing.has_real_data || false,
@@ -283,7 +283,7 @@ function GuitarDetailPageContent() {
               marketplace: listing.source || listing.marketplace || 'Unknown',
               sellerLocation: listing.seller_location || listing.location || 'Location not specified',
               datePosted: listing.listed_date ? new Date(listing.listed_date).toLocaleDateString() : 'Recently',
-              listingUrl: listing.url || listing.listingUrl,
+              listingUrl: listing.url || listing.listingUrl || '#',
               condition: listing.condition || 'Used',
               dealScore: listing.deal_score || Math.floor(Math.random() * 40 + 60),
               sellerVerified: listing.seller_verified || false,
@@ -811,7 +811,14 @@ function GuitarDetailPageContent() {
                         <motion.div 
                           key={deal.id}
                           className="border rounded-lg p-4 hover:shadow-lg hover:border-teal-200 transition-all duration-300 cursor-pointer group"
-                          onClick={() => window.open(deal.listingUrl, '_blank')}
+                          onClick={() => {
+                            if (deal.listingUrl && deal.listingUrl !== '#') {
+                              window.open(deal.listingUrl, '_blank');
+                            } else {
+                              console.warn('No valid listing URL available for this deal');
+                              // Could show a toast notification here
+                            }
+                          }}
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ 

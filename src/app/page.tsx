@@ -340,7 +340,7 @@ export default function Dashboard() {
               </Card>
             </DialogTrigger>
             <DialogContent className="
-              w-[calc(100vw-20px)] h-[calc(100vh-20px)] max-w-[calc(100vw-20px)] max-h-[calc(100vh-20px)]
+              w-[calc(100vw-20px)] h-[600px] max-w-[calc(100vw-20px)] max-h-[600px]
               sm:w-[85vw] sm:max-w-lg sm:h-auto sm:max-h-[calc(100vh-2rem)]
               overflow-y-auto flex flex-col m-0 p-6
             ">

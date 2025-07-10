@@ -70,8 +70,8 @@ function DialogContent({
           "sm:w-[85vw] sm:max-w-lg",       // Tablet: 85% width, max 512px  
           "md:w-[75vw] md:max-w-xl",       // Desktop: 75% width, max 576px
           "lg:w-[60vw] lg:max-w-2xl",      // Large: 60% width, max 672px
-          // Responsive height and spacing - only scroll when necessary
-          "max-h-[calc(100vh-2rem)] overflow-y-auto",  // Leave 1rem margin on top/bottom
+          // Responsive height - fixed on mobile, viewport-based on larger screens
+          "max-h-[600px] sm:max-h-[calc(100vh-2rem)] overflow-y-auto",  // Fixed height on mobile, viewport-based on sm+
           "p-4 sm:p-6",                    // Responsive padding
           "m-4",                           // Margin for safety on small screens
           // Visual styling
