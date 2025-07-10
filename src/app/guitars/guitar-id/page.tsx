@@ -911,7 +911,7 @@ function GuitarDetailPageContent() {
                             </div>
                             
                             {/* External Link Icon */}
-                            <div className="flex-shrink-0 self-start mt-1">
+                            <div className="flex-shrink-0 self-start mt-1 hidden md:block">
                               <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-teal-500 transition-colors duration-200" />
                             </div>
                           </div>

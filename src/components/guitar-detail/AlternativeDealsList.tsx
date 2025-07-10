@@ -277,7 +277,7 @@ export default function AlternativeDealsList({ deals }: AlternativeDealsListProp
                           onClick={() => window.open(deal.listingUrl, '_blank')}
                           className="flex-shrink-0 hover:bg-teal-50 hover:border-teal-300 group-hover:border-teal-400 transition-all duration-200"
                         >
-                          <ExternalLink className="w-4 h-4 mr-1" />
+                          <ExternalLink className="w-4 h-4 mr-1 hidden sm:inline" />
                           <span className="hidden sm:inline">View</span>
                         </Button>
                       </motion.div>

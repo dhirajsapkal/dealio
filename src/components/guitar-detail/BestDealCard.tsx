@@ -228,7 +228,7 @@ export default function BestDealCard({ deal }: BestDealCardProps) {
                   className="w-full bg-green-600 hover:bg-green-700 text-white text-lg py-6 mb-3 transition-all duration-200"
                   onClick={() => window.open(deal.listingUrl, '_blank')}
                 >
-                  <ExternalLink className="w-5 h-5 mr-2" />
+                  <ExternalLink className="w-5 h-5 mr-2 hidden sm:inline" />
                   View Listing
                 </Button>
               </motion.div>
