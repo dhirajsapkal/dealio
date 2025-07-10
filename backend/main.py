@@ -160,7 +160,7 @@ def standardize_listing(listing: Dict, source: str) -> Dict:
         "finish": listing.get('finish', 'N/A'),
         "category": listing.get('category', 'N/A'),
         "description": cleaned_description,
-        "listingUrl": listing.get('web_url', '#'),
+        "listingUrl": listing.get("_links", {}).get("web", {}).get("href", listing.get('url', '#')),
         "imageUrl": listing.get('image_url', '/placeholder.jpg'),
         "source": source,
         "created_at": listing.get('created_at', datetime.now().isoformat()),

@@ -811,12 +811,13 @@ function GuitarDetailPageContent() {
                         <motion.div 
                           key={deal.id}
                           className="border rounded-lg p-4 hover:shadow-lg hover:border-teal-200 transition-all duration-300 cursor-pointer group"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
                             if (deal.listingUrl && deal.listingUrl !== '#') {
                               window.open(deal.listingUrl, '_blank');
                             } else {
-                              console.warn('No valid listing URL available for this deal');
-                              // Could show a toast notification here
+                              console.warn('No valid listing URL available for this deal:', deal);
                             }
                           }}
                           initial={{ opacity: 0, y: 10 }}
@@ -870,6 +871,7 @@ function GuitarDetailPageContent() {
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     transition={{ duration: 0.3, delay: 0.3 }}
+                                    className="flex-shrink-0"
                                   >
                                     🔥
                                   </motion.span>
