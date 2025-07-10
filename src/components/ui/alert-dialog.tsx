@@ -60,15 +60,12 @@ function AlertDialogContent({
         className={cn(
           // Perfect centering
           "fixed top-1/2 left-1/2 z-50 transform -translate-x-1/2 -translate-y-1/2",
-          // Responsive sizing
-          "w-[95vw] max-w-sm mx-auto",      // Mobile: 95% width, max 384px
-          "sm:w-[85vw] sm:max-w-md",       // Tablet: 85% width, max 448px  
-          "md:w-[75vw] md:max-w-lg",       // Desktop: 75% width, max 512px
-          "lg:w-[60vw] lg:max-w-xl",       // Large: 60% width, max 576px
-          // Responsive height and spacing
-          "max-h-[90vh] overflow-y-auto",  // Never exceed 90% of viewport height
-          "p-4 sm:p-6",                    // Responsive padding
-          "m-4",                           // Margin for safety on small screens
+          // Dynamic sizing with equal padding on all sides
+          "w-[calc(100vw-2rem)] max-w-md", // 1rem padding on each side, max-width for larger screens
+          "h-auto max-h-[calc(100vh-2rem)]", // Dynamic height, max-height with equal padding
+          // Content layout
+          "overflow-y-auto flex flex-col",
+          "p-6", // Consistent padding on all sides
           // Visual styling
           "bg-white rounded-xl border shadow-2xl",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
@@ -102,7 +99,7 @@ function AlertDialogHeader({
       data-slot="alert-dialog-header"
       className={cn(
         "flex flex-col gap-2 text-center sm:text-left",
-        "mb-4 sm:mb-6", // Responsive bottom margin
+        "mb-4", // Consistent bottom margin
         className
       )}
       {...props}
@@ -119,7 +116,7 @@ function AlertDialogFooter({
       data-slot="alert-dialog-footer"
       className={cn(
         "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
-        "mt-4 sm:mt-6", // Responsive top margin
+        "mt-4", // Consistent top margin
         "pt-4 border-t border-gray-100", // Visual separator
         className
       )}
@@ -168,7 +165,7 @@ function AlertDialogAction({
     <AlertDialogPrimitive.Action
       className={cn(
         buttonVariants(),
-        "w-full sm:w-auto", // Full width on mobile, auto on desktop
+        "w-full sm:w-auto", // Keep full width on mobile for better touch targets
         className
       )}
       {...props}
@@ -184,8 +181,8 @@ function AlertDialogCancel({
     <AlertDialogPrimitive.Cancel
       className={cn(
         buttonVariants({ variant: "outline" }),
-        "w-full sm:w-auto", // Full width on mobile, auto on desktop
-        "mt-2 sm:mt-0", // Add margin on mobile
+        "w-full sm:w-auto", // Keep full width on mobile for better touch targets
+        "mt-2 sm:mt-0", // Add margin on mobile for spacing
         className
       )}
       {...props}

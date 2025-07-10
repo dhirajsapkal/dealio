@@ -317,7 +317,9 @@ export default function Dashboard() {
           {/* CTA Card - Always First */}
           <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
             <DialogTrigger asChild>
-              <Card className="border-2 border-dashed border-teal-300 hover:border-teal-400 transition-colors duration-200 cursor-pointer bg-teal-50/50 hover:bg-teal-50 h-full">
+              <Card className={`border-2 border-dashed border-teal-300 hover:border-teal-400 transition-colors duration-200 cursor-pointer bg-teal-50/50 hover:bg-teal-50 h-full ${
+                trackedGuitars.length > 0 ? 'order-last md:order-first' : 'order-first'
+              }`}>
                 <CardContent className="flex flex-col items-center justify-center h-full p-6 text-center min-h-[420px]">
                   <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mb-4">
                     <Plus className="w-8 h-8 text-teal-600" />
@@ -338,10 +340,9 @@ export default function Dashboard() {
               </Card>
             </DialogTrigger>
             <DialogContent className="
-              fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50
               w-[calc(100vw-20px)] h-[calc(100vh-20px)] max-w-[calc(100vw-20px)] max-h-[calc(100vh-20px)]
               sm:w-[85vw] sm:max-w-lg sm:h-auto sm:max-h-[calc(100vh-2rem)]
-              overflow-y-auto flex flex-col
+              overflow-y-auto flex flex-col m-0 p-6
             ">
               <DialogHeader className="flex-shrink-0">
                 <DialogTitle className="flex items-center gap-2">
@@ -462,28 +463,37 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <DialogFooter className="flex gap-2 flex-shrink-0">
+              {/* Footer */}
+              <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:gap-2 flex-shrink-0 p-0 sm:p-6 sm:pt-4 border-t border-gray-200 bg-white">
+                {/* Start Tracking Button - appears first on mobile (above Cancel) */}
                 <motion.div
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   transition={{ duration: 0.1 }}
-                >
-                  <Button variant="outline" onClick={() => setIsAddModalOpen(false)}>
-                    Cancel
-                  </Button>
-                </motion.div>
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ duration: 0.1 }}
+                  className="w-full sm:w-auto sm:order-2"
                 >
                   <Button 
                     onClick={handleAddGuitar}
-                    className="bg-teal-600 hover:bg-teal-700 flex items-center gap-2"
+                    className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 flex items-center justify-center gap-2"
                     disabled={!formData.type || !formData.brand || !formData.model}
                   >
                     <Plus className="w-4 h-4" />
                     Start Tracking
+                  </Button>
+                </motion.div>
+                {/* Cancel Button - appears second on mobile (below Start Tracking) */}
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ duration: 0.1 }}
+                  className="w-full sm:w-auto sm:order-1"
+                >
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setIsAddModalOpen(false)}
+                    className="w-full sm:w-auto"
+                  >
+                    Cancel
                   </Button>
                 </motion.div>
               </DialogFooter>
@@ -675,6 +685,7 @@ export default function Dashboard() {
             </motion.div>
             )
           })}
+
         </div>
       </main>
 
@@ -693,10 +704,7 @@ export default function Dashboard() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmRemoveGuitar}
-              className="bg-red-600 hover:bg-red-700"
-            >
+            <AlertDialogAction onClick={confirmRemoveGuitar}>
               Remove Guitar
             </AlertDialogAction>
           </AlertDialogFooter>
